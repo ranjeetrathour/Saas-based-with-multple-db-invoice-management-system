@@ -38,28 +38,4 @@ public class TenantDatabaseProvisioningService {
         }
     }
 
-    public void migrateDatabase(String databaseName) {
-        String tenantUrl = "jdbc:postgresql://"
-                + properties.getHost()
-                + ":"
-                + properties.getPort()
-                + "/"
-                + databaseName;
-
-       try {
-           Flyway flyway = Flyway.configure()
-                   .dataSource(tenantUrl, properties.getUsername(), properties.getPassword())
-                   .locations("classpath:tenant", "classpath:db/migration/tenant")
-                   .baselineOnMigrate(true)
-                   .validateOnMigrate(true)
-                   .outOfOrder(true)
-                   .load();
-
-           flyway.migrate();
-           log.info("migration success for db {} ", databaseName);
-       } catch (Exception e) {
-           log.info("migration failed after creating db");
-           throw new RuntimeException(e);
-       }
-    }
 }

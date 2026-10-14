@@ -1,8 +1,6 @@
 package com.moptra.invoice.authentication.config;
 
 import com.moptra.invoice.authentication.filter.JwtAuthenticationFilter;
-import com.moptra.invoice.authentication.provider.CustomAuthenticationProvider;
-import com.moptra.invoice.user.repository.rd.UserIdentityRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +17,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @AllArgsConstructor
 public class SecurityConfig {
 
-    private final UserIdentityRepository userIdentityRepository;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
@@ -42,12 +39,10 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                .authenticationProvider(new CustomAuthenticationProvider(userIdentityRepository, passwordEncoder()))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
-    // Declared here to break the cycle
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

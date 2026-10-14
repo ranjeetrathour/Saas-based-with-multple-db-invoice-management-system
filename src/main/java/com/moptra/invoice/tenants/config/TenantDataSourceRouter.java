@@ -21,9 +21,6 @@ public class TenantDataSourceRouter extends AbstractRoutingDataSource {
         afterPropertiesSet();
     }
 
-    public boolean isRegistered(String tenantId) {
-        return tenantDataSources.containsKey(tenantId);
-    }
 
     public void setDefaultTenant(String tenantId) {
         DataSource ds = tenantDataSources.get(tenantId);
@@ -38,10 +35,16 @@ public class TenantDataSourceRouter extends AbstractRoutingDataSource {
     @Override
     protected DataSource determineTargetDataSource() {
         Object lookupKey = determineCurrentLookupKey();
+        System.out.println("DEBUG: Looking up DataSource for Tenant Key: " + lookupKey);
+
         DataSource ds = lookupKey != null ? tenantDataSources.get(lookupKey) : null;
         if (ds == null) {
+            System.err.println("WARNING: Tenant DataSource NOT FOUND for key [" + lookupKey + "]. Falling back to master/default DB!");
             ds = fallbackDataSource;
+        } else {
+            System.out.println("SUCCESS: Found tenant DataSource for key [" + lookupKey + "]");
         }
+
         if (ds == null) {
             throw new IllegalStateException("Cannot determine target DataSource for lookup key [" + lookupKey + "]");
         }

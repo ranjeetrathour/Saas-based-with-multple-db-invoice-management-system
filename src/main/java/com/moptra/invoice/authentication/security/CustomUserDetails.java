@@ -18,7 +18,6 @@ public class CustomUserDetails implements UserDetails {
     private final String companyId;
     private final Collection<? extends GrantedAuthority> authorities;
 
-    // Constructor matching the parameters passed from UserDetailsServiceImpl
     public CustomUserDetails(String email, String password, String tenantId, String companyId, UserRole role) {
         this.email = email;
         this.password = password;

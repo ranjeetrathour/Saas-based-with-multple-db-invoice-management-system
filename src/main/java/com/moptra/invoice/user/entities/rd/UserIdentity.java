@@ -1,7 +1,7 @@
 package com.moptra.invoice.user.entities.rd;
 
 import com.moptra.invoice.comman.entity.BaseEntity;
-import com.moptra.invoice.tenants.entites.Company;
+import com.moptra.invoice.tenants.entites.rd.Company;
 import com.moptra.invoice.tenants.enums.AccountStatus;
 import com.moptra.invoice.user.enums.IdentityType;
 import com.moptra.invoice.user.enums.UserRole;

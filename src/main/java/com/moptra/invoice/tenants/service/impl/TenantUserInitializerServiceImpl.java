@@ -4,7 +4,6 @@ import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
 import com.moptra.invoice.tenants.context.TenantContext;
 import com.moptra.invoice.tenants.dto.req.RegisterCompanyRequest;
 import com.moptra.invoice.tenants.service.TenantUserInitializerService;
-import com.moptra.invoice.user.dto.req.CreateUserRequest;
 import com.moptra.invoice.user.entities.rd.User;
 import com.moptra.invoice.user.enums.UserRole;
 import lombok.extern.slf4j.Slf4j;
@@ -38,12 +37,7 @@ public class TenantUserInitializerServiceImpl extends BaseServiceImpl<User, Stri
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void createTenantUser(String databaseName, CreateUserRequest request) {
-        User tenantUser = User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
-                .role(request.getRole())
-                .build();
-        save(tenantUser);
+    public void createTenantUser(String databaseName, User request) {
+        save(request);
     }
 }

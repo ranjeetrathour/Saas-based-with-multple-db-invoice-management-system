@@ -1,38 +1,44 @@
 package com.moptra.invoice.user.entities.rd;
 
-import jakarta.persistence.Entity;
-
 import com.moptra.invoice.comman.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
-@Table(name = "employee")
+@Table(name = "employees")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Employee extends BaseEntity{
+public class Employee extends BaseEntity {
 
+    @Column(name = "employee_id", nullable = false, unique = true)
     private String employeeId;
 
     private String designation;
 
-    private String reportManager;
-
-    private String teamLead;
-
     private String department;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    private Employee reportManager;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_lead_id")
+    private Employee teamLead;
+
+    @Column(name = "branch_id")
+    private String branch;
+
+    @Column(name = "joining_date")
+    private LocalDate joiningDate;
+
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", unique = true)
-    @ToString.Exclude
     private User user;
-
-    /**
-     * user will align with an project so it has mapping with the project or client anyone
-     */
-
 }

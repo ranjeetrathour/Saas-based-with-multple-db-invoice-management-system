@@ -1,6 +1,6 @@
 package com.moptra.invoice.tenants.service;
 
-import com.moptra.invoice.tenants.entites.TenantDatabase;
+import com.moptra.invoice.tenants.entites.rd.TenantDatabase;
 
 public interface TenantConfigService {
     void loadAndRegisterAllTenants();

@@ -17,8 +17,6 @@ public class RegisterCompanyResponse {
 
     private String password;
 
-    private String databaseName;
-
     private String status;
 
     private String message;

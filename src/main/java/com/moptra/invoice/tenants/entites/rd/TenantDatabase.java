@@ -1,11 +1,9 @@
-package com.moptra.invoice.tenants.entites;
+package com.moptra.invoice.tenants.entites.rd;
 
 import com.moptra.invoice.comman.entity.BaseEntity;
 import com.moptra.invoice.tenants.enums.TenantDatabaseStatus;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tenant_databases")
@@ -16,9 +14,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class TenantDatabase extends BaseEntity {
 
-    /**
-     * company id act as tenant id it can change later if needed
-     */
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "company_id", nullable = false, unique = true)
     private Company company;
@@ -41,6 +36,4 @@ public class TenantDatabase extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TenantDatabaseStatus status;
-
-    
 }

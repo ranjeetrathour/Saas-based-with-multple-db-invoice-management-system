@@ -12,7 +12,7 @@ public abstract class BaseServiceImpl<ENTITY, ID> {
     protected final JpaRepository<ENTITY, ID> repository;
 
     protected ENTITY save(ENTITY entity) {
-        return repository.save(entity);
+        return repository.saveAndFlush(entity);
     }
 
     protected ENTITY findById(ID id) {
@@ -28,6 +28,9 @@ public abstract class BaseServiceImpl<ENTITY, ID> {
             throw new RuntimeException("Entity not found: " + id);
         }
         repository.deleteById(id);
+    }
+    protected List<ENTITY> saveAll(List<ENTITY> entities){
+        return repository.saveAll(entities);
     }
     
 }

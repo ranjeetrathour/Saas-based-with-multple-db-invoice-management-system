@@ -1,7 +1,7 @@
 package com.moptra.invoice.user.service;
 
-import com.moptra.invoice.user.dto.req.CreateUserRequest;
+import com.moptra.invoice.user.dto.req.CreateEmployeeRequest;
 
 public interface UserService {
-    void createUser(CreateUserRequest request);
+    void createUser(CreateEmployeeRequest request);
 }

@@ -26,4 +26,8 @@ public class TenantMongoProvisioningService {
             throw new RuntimeException(e);
         }
     }
+
+    public void migrateTenantDB(String databaseName){
+
+    }
 }
