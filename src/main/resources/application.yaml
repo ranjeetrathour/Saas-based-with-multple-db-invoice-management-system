@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: invoice-generator
+
+  sql:
+    init:
+      enabled: false
+
+  datasource:
+    master:
+      url: jdbc:postgresql://localhost:5432/saas_master
+      username: postgres
+      password: postgres
+
+    nrd:
+
+
+
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: false
+
+app:
+  tenant:
+    provisioning:
+      host: localhost
+      port: 5432
+      admin-database: postgres
+      username: postgres
+      password: postgres
+      mongo-host: localhost
+      mongo-port: 27017
+#      mongo-username: mongo
+#      mongo-password: mongo
+      default-db-username: postgres
+      default-db-password: postgres
+
+springdoc:
+  swagger-ui:
+    path: /v1/swagger-ui.html
+  api-docs:
+    path: /v1/api-docs
