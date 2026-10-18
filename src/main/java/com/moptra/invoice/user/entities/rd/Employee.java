@@ -1,4 +1,4 @@
-package com.moptra.invoice.user.entities;
+package com.moptra.invoice.user.entities.rd;
 
 import jakarta.persistence.Entity;
 

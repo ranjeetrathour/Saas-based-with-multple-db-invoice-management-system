@@ -24,5 +24,5 @@ public class TenantProvisioningProperties {
 
     private String mongoHost;
 
-    private String mongoPort;
+    private Integer mongoPort;
 }

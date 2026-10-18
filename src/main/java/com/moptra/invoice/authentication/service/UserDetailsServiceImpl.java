@@ -1,7 +1,7 @@
 package com.moptra.invoice.authentication.service.impl;
 
 import com.moptra.invoice.authentication.security.CustomUserDetails;
-import com.moptra.invoice.user.entities.UserIdentity;
+import com.moptra.invoice.user.entities.rd.UserIdentity;
 import com.moptra.invoice.user.repository.rd.UserIdentityRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

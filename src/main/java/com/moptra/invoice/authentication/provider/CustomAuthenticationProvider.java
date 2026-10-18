@@ -1,7 +1,7 @@
 package com.moptra.invoice.authentication.provider;
 
 import com.moptra.invoice.authentication.security.CustomUserDetails;
-import com.moptra.invoice.user.entities.UserIdentity;
+import com.moptra.invoice.user.entities.rd.UserIdentity;
 import com.moptra.invoice.user.repository.rd.UserIdentityRepository;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.AuthenticationProvider;

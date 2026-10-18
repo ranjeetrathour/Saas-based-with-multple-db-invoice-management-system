@@ -10,12 +10,13 @@ import com.moptra.invoice.tenants.enums.AccountStatus;
 import com.moptra.invoice.tenants.enums.CompanyStatus;
 import com.moptra.invoice.tenants.enums.TenantDatabaseStatus;
 import com.moptra.invoice.tenants.provisioning.TenantDatabaseProvisioningService;
+import com.moptra.invoice.tenants.provisioning.TenantMongoProvisioningService;
 import com.moptra.invoice.tenants.repository.rd.CompanyRepository;
 import com.moptra.invoice.tenants.repository.rd.TenantDatabaseRepository;
 import com.moptra.invoice.tenants.service.CompanyRegistrationService;
 import com.moptra.invoice.tenants.service.TenantConfigService;
 import com.moptra.invoice.tenants.service.TenantUserInitializerService;
-import com.moptra.invoice.user.entities.UserIdentity;
+import com.moptra.invoice.user.entities.rd.UserIdentity;
 import com.moptra.invoice.user.enums.IdentityType;
 import com.moptra.invoice.user.enums.UserRole;
 import com.moptra.invoice.user.repository.rd.UserIdentityRepository;
@@ -36,6 +37,7 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
     private final TenantConfigService tenantConfigService;
     private final TenantUserInitializerService tenantUserInitializerService;
     private final PasswordEncoder passwordEncoder;
+    private final TenantMongoProvisioningService tenantMongoProvisioningService;
 
     public CompanyRegistrationServiceImpl(
             CompanyRepository companyRepository,
@@ -44,7 +46,7 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
             TenantDatabaseProvisioningService tenantDatabaseProvisioningService,
             TenantConfigService tenantConfigService,
             TenantUserInitializerService tenantUserInitializerService,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder, TenantMongoProvisioningService tenantMongoProvisioningService) {
         super(companyRepository);
         this.companyRepository = companyRepository;
         this.userIdentityRepository = userIdentityRepository;
@@ -53,6 +55,7 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
         this.tenantConfigService = tenantConfigService;
         this.tenantUserInitializerService = tenantUserInitializerService;
         this.passwordEncoder = passwordEncoder;
+        this.tenantMongoProvisioningService = tenantMongoProvisioningService;
     }
 
     @Override
@@ -93,6 +96,10 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
 
             // 3. Register tenant DataSource & execute Flyway migrations
             tenantConfigService.registerNewTenant(tenantDatabase);
+
+            // Create dynamic db for mongo
+            tenantMongoProvisioningService.createDataBase(databaseName);
+
 
             // 4. Save Master UserIdentity
             UserIdentity identity = UserIdentity.builder()

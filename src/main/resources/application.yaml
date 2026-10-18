@@ -43,6 +43,15 @@ app:
       default-db-username: postgres
       default-db-password: postgres
 
+######################################################
+## mongo migration
+######################################################
+mongo:
+  migration-scan-package: src/main/java/com/moptra/invoice/comman/mongomigration
+mongock:
+  enabled: false
+
+
 springdoc:
   swagger-ui:
     path: /v1/swagger-ui.html

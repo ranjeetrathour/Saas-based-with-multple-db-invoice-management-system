@@ -1,4 +1,4 @@
-package com.moptra.invoice.user.entities;
+package com.moptra.invoice.user.entities.rd;
 
 import com.moptra.invoice.comman.entity.BaseEntity;
 import com.moptra.invoice.user.enums.UserRole;

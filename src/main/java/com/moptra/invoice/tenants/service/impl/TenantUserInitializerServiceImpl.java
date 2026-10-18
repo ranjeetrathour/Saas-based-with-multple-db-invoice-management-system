@@ -5,7 +5,7 @@ import com.moptra.invoice.tenants.context.TenantContext;
 import com.moptra.invoice.tenants.dto.req.RegisterCompanyRequest;
 import com.moptra.invoice.tenants.service.TenantUserInitializerService;
 import com.moptra.invoice.user.dto.req.CreateUserRequest;
-import com.moptra.invoice.user.entities.User;
+import com.moptra.invoice.user.entities.rd.User;
 import com.moptra.invoice.user.enums.UserRole;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;
