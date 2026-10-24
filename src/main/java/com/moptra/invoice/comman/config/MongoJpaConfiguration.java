@@ -1,19 +1,22 @@
+
 package com.moptra.invoice.comman.config;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import com.moptra.invoice.tenants.config.TenantRoutingMongoDatabaseFactory;
 import com.moptra.invoice.tenants.properties.TenantProvisioningProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @Configuration
 @EnableMongoRepositories(
         basePackages = {
-                "com.moptra.invoice.tenants.repository.mongo",
-                "com.moptra.invoice.user.repository.mongo"
+                "com.moptra.invoice.tenants.repository.nrd",
+                "com.moptra.invoice.user.repository.nrd"
         },
         mongoTemplateRef = "mongoTemplate"
 )
@@ -36,9 +39,12 @@ public class MongoJpaConfiguration {
     }
 
     @Bean
-    public MongoTemplate mongoTemplate() {
-        // Default template pointing to a default database name
-        // (For multi-tenancy, you'll still instantiate MongoTemplate dynamically per tenant db when needed)
-        return new MongoTemplate(mongoClient(), "default_invoice_db");
+    public MongoDatabaseFactory mongoDatabaseFactory(MongoClient mongoClient) {
+        return new TenantRoutingMongoDatabaseFactory(mongoClient, "default_invoice_db");
+    }
+
+    @Bean
+    public MongoTemplate mongoTemplate(MongoDatabaseFactory mongoDatabaseFactory) {
+        return new MongoTemplate(mongoDatabaseFactory);
     }
 }

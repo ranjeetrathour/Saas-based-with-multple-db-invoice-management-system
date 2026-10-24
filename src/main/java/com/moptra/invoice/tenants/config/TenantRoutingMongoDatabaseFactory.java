@@ -16,22 +16,23 @@ public class TenantRoutingMongoDatabaseFactory extends SimpleMongoClientDatabase
         this.mongoClient = mongoClient;
     }
 
-
-    /**
-     *
-     * @param dbName must not be {@literal null} or empty.
-     * @return run on each db hit
-     */
     @Override
     protected MongoDatabase doGetMongoDatabase(String dbName) {
-        Object tenantId = TenantContext.getTenantId();
+        String tenantId = TenantContext.getTenantId();
+        String targetDbName;
 
-        String targetDbName = (tenantId != null && !tenantId.toString().isEmpty())
-                ? "tenant_" + tenantId.toString().toLowerCase()
-                : "default_invoice_db";
+        if (tenantId != null && !tenantId.isBlank()) {
+            targetDbName = tenantId.trim().toLowerCase();
 
-        log.debug("MONGO ROUTER: Routing request to database -> {}", targetDbName);
+            if (!targetDbName.startsWith("tenant_")) {
+                targetDbName = "tenant_" + targetDbName;
+            }
+        } else {
+            targetDbName = "default_invoice_db";
+        }
 
-        return this.mongoClient.getDatabase(targetDbName);
+        log.info("MONGO ROUTER: TenantContext={}, Database={}", tenantId, targetDbName);
+
+        return mongoClient.getDatabase(targetDbName);
     }
 }

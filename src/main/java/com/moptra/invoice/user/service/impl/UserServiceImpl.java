@@ -52,19 +52,6 @@ public class UserServiceImpl extends BaseServiceImpl<User, String> implements Us
             TenantContext.setTenantId(currentUser.getTenantId());
         }
 
-
-//        // 2. Save UserIdentity in Master DB (for global login lookup)
-//        UserIdentity identity = UserIdentity.builder()
-//                .company(currentUser.getCompanyId())
-//                .name(request.getName())
-//                .email(request.getEmail())
-//                .passwordHash(passwordEncoder.encode(request.getPassword()))
-//                .role(request.getRole())
-//                .status(AccountStatus.ACTIVE)
-//                .build();
-//
-//        userIdentityRepository.save(identity);
-
         // 3. Map DTO to Entities cleanly using GenericMapper
         Employee employee = GenericMapper.map(request, Employee.class);
         User user = GenericMapper.map(request, User.class);
@@ -78,9 +65,5 @@ public class UserServiceImpl extends BaseServiceImpl<User, String> implements Us
             // Keep existing tenantId context active for request lifetime
             TenantContext.setTenantId(tenantId);
         }
-    }
-
-    private void createMasterUserIdentity(String companyId, CreateEmployeeRequest request){
-
     }
 }

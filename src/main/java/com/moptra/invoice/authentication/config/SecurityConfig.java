@@ -1,7 +1,10 @@
+
 package com.moptra.invoice.authentication.config;
 
 import com.moptra.invoice.authentication.filter.JwtAuthenticationFilter;
+import com.moptra.invoice.tenants.filter.TenantFilter;
 import lombok.AllArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,10 +21,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final TenantFilter tenantFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception {
-        return security
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
@@ -29,7 +33,6 @@ public class SecurityConfig {
                                 "/",
                                 "/api/v1/auth/login",
                                 "/api/onboarding/**",
-                                // Added /v1/api-docs/** here:
                                 "/v1/api-docs/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
@@ -40,7 +43,16 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(tenantFilter, JwtAuthenticationFilter.class)
                 .build();
+    }
+
+    // Prevent duplicate servlet-container registration.
+    @Bean
+    public FilterRegistrationBean<TenantFilter> tenantFilterRegistration() {
+        FilterRegistrationBean<TenantFilter> registration = new FilterRegistrationBean<>(tenantFilter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean
@@ -49,7 +61,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
 }
