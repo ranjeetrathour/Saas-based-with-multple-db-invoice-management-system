@@ -1,4 +1,4 @@
-package com.moptra.invoice.tenants.dto.req;
+package com.moptra.invoice.client.dto.req;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;

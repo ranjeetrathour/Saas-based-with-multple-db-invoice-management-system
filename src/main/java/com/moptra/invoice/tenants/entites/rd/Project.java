@@ -1,5 +1,7 @@
 package com.moptra.invoice.tenants.entites.rd;
 
+import com.moptra.invoice.client.entity.rd.ClientBranch;
+import com.moptra.invoice.client.entity.rd.ClientCompany;
 import com.moptra.invoice.comman.entity.BaseEntity;
 import com.moptra.invoice.tenants.enums.ProjectBillingType;
 import com.moptra.invoice.tenants.enums.ProjectStatus;

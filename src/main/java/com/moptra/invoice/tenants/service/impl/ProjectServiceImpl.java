@@ -1,5 +1,9 @@
 package com.moptra.invoice.tenants.service.impl;
 
+import com.moptra.invoice.client.entity.rd.ClientBranch;
+import com.moptra.invoice.client.entity.rd.ClientCompany;
+import com.moptra.invoice.client.repository.rd.ClientBranchRepository;
+import com.moptra.invoice.client.repository.rd.ClientCompanyRepository;
 import com.moptra.invoice.comman.mappers.GenericMapper;
 import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
 import com.moptra.invoice.tenants.dto.req.ProjectRequest;

@@ -1,6 +1,6 @@
-package com.moptra.invoice.tenants.repository.rd;
+package com.moptra.invoice.client.repository.rd;
 
-import com.moptra.invoice.tenants.entites.rd.ClientCompany;
+import com.moptra.invoice.client.entity.rd.ClientCompany;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

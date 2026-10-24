@@ -1,8 +1,8 @@
-package com.moptra.invoice.tenants.controller;
+package com.moptra.invoice.client.controller;
 
-import com.moptra.invoice.tenants.dto.req.ClientCompanyRequest;
-import com.moptra.invoice.tenants.dto.res.ClientCompanyResponse;
-import com.moptra.invoice.tenants.service.ClientCompanyService;
+import com.moptra.invoice.client.dto.req.ClientCompanyRequest;
+import com.moptra.invoice.client.dto.res.ClientCompanyResponse;
+import com.moptra.invoice.client.service.ClientCompanyService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.moptra.invoice.tenants.dto.res;
+package com.moptra.invoice.client.dto.res;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,19 +1,17 @@
-package com.moptra.invoice.tenants.service.impl;
+package com.moptra.invoice.client.service.impl;
 
-import com.moptra.invoice.authentication.security.CustomUserDetails;
 import com.moptra.invoice.comman.mappers.GenericMapper;
 import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
 import com.moptra.invoice.tenants.context.TenantContext;
-import com.moptra.invoice.tenants.dto.req.ClientCompanyRequest;
-import com.moptra.invoice.tenants.dto.res.ClientCompanyResponse;
-import com.moptra.invoice.tenants.entites.rd.ClientBranch;
-import com.moptra.invoice.tenants.entites.rd.ClientCompany;
-import com.moptra.invoice.tenants.repository.rd.ClientCompanyRepository;
-import com.moptra.invoice.tenants.service.ClientBranchService;
-import com.moptra.invoice.tenants.service.ClientCompanyService;
+import com.moptra.invoice.client.dto.req.ClientCompanyRequest;
+import com.moptra.invoice.client.dto.res.ClientCompanyResponse;
+import com.moptra.invoice.client.entity.rd.ClientBranch;
+import com.moptra.invoice.client.entity.rd.ClientCompany;
+import com.moptra.invoice.client.repository.rd.ClientCompanyRepository;
+import com.moptra.invoice.client.service.ClientBranchService;
+import com.moptra.invoice.client.service.ClientCompanyService;
 import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

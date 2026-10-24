@@ -1,6 +1,6 @@
-package com.moptra.invoice.tenants.repository.rd;
+package com.moptra.invoice.client.repository.rd;
 
-import com.moptra.invoice.tenants.entites.rd.ClientBranch;
+import com.moptra.invoice.client.entity.rd.ClientBranch;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

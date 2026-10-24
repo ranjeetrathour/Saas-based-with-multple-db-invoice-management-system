@@ -1,8 +1,8 @@
-package com.moptra.invoice.tenants.service;
+package com.moptra.invoice.client.service;
 
 
-import com.moptra.invoice.tenants.dto.req.ClientCompanyRequest;
-import com.moptra.invoice.tenants.dto.res.ClientCompanyResponse;
+import com.moptra.invoice.client.dto.req.ClientCompanyRequest;
+import com.moptra.invoice.client.dto.res.ClientCompanyResponse;
 
 import java.util.List;
 
