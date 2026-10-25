@@ -1,4 +1,4 @@
-package com.moptra.invoice.tenants.dto.req;
+package com.moptra.invoice.project.dto.req;
 
 import com.moptra.invoice.tenants.enums.ProjectBillingType;
 import com.moptra.invoice.tenants.enums.ProjectStatus;

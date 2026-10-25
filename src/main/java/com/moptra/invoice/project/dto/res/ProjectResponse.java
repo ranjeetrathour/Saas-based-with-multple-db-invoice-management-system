@@ -1,9 +1,7 @@
-package com.moptra.invoice.tenants.dto.res;
+package com.moptra.invoice.project.dto.res;
 
 import com.moptra.invoice.tenants.enums.ProjectBillingType;
 import com.moptra.invoice.tenants.enums.ProjectStatus;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

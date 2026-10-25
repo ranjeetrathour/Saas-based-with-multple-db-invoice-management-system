@@ -1,4 +1,4 @@
-package com.moptra.invoice.tenants.entites.rd;
+package com.moptra.invoice.project.entites.rd;
 
 import com.moptra.invoice.comman.entity.BaseEntity;
 import com.moptra.invoice.user.entities.rd.Employee;

@@ -1,7 +1,7 @@
-package com.moptra.invoice.tenants.controller;
+package com.moptra.invoice.project.controller;
 
-import com.moptra.invoice.tenants.dto.req.ProjectAllocationRequest;
-import com.moptra.invoice.tenants.service.ProjectAllocationService;
+import com.moptra.invoice.project.dto.req.ProjectAllocationRequest;
+import com.moptra.invoice.project.service.ProjectAllocationService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;

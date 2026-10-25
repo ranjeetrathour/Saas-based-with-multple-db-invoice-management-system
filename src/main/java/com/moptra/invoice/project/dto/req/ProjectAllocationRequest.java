@@ -1,6 +1,6 @@
-package com.moptra.invoice.tenants.dto.req;
+package com.moptra.invoice.project.dto.req;
 
-import com.moptra.invoice.tenants.entites.rd.Project;
+import com.moptra.invoice.project.entites.rd.Project;
 import com.moptra.invoice.user.entities.rd.Employee;
 import lombok.AllArgsConstructor;
 import lombok.Data;

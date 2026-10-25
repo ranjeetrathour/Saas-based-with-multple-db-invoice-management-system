@@ -1,11 +1,11 @@
-package com.moptra.invoice.tenants.service.impl;
+package com.moptra.invoice.project.service.impl;
 
 import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
-import com.moptra.invoice.tenants.dto.req.ProjectAllocationRequest;
-import com.moptra.invoice.tenants.entites.rd.Project;
-import com.moptra.invoice.tenants.entites.rd.ProjectAllocation;
-import com.moptra.invoice.tenants.repository.rd.ProjectRepository;
-import com.moptra.invoice.tenants.service.ProjectAllocationService;
+import com.moptra.invoice.project.dto.req.ProjectAllocationRequest;
+import com.moptra.invoice.project.entites.rd.Project;
+import com.moptra.invoice.project.entites.rd.ProjectAllocation;
+import com.moptra.invoice.project.repository.rd.ProjectRepository;
+import com.moptra.invoice.project.service.ProjectAllocationService;
 import com.moptra.invoice.user.entities.rd.Employee;
 import com.moptra.invoice.user.repository.rd.EmployeeRepository;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.moptra.invoice.tenants.service.impl;
+package com.moptra.invoice.project.service.impl;
 
 import com.moptra.invoice.client.entity.rd.ClientBranch;
 import com.moptra.invoice.client.entity.rd.ClientCompany;
@@ -6,11 +6,11 @@ import com.moptra.invoice.client.repository.rd.ClientBranchRepository;
 import com.moptra.invoice.client.repository.rd.ClientCompanyRepository;
 import com.moptra.invoice.comman.mappers.GenericMapper;
 import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
-import com.moptra.invoice.tenants.dto.req.ProjectRequest;
-import com.moptra.invoice.tenants.dto.res.ProjectResponse;
-import com.moptra.invoice.tenants.entites.rd.*;
-import com.moptra.invoice.tenants.repository.rd.*;
-import com.moptra.invoice.tenants.service.ProjectService;
+import com.moptra.invoice.project.entites.rd.Project;
+import com.moptra.invoice.project.dto.req.ProjectRequest;
+import com.moptra.invoice.project.dto.res.ProjectResponse;
+import com.moptra.invoice.project.repository.rd.ProjectRepository;
+import com.moptra.invoice.project.service.ProjectService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,8 +1,8 @@
-package com.moptra.invoice.tenants.controller;
+package com.moptra.invoice.project.controller;
 
-import com.moptra.invoice.tenants.dto.req.ProjectRequest;
-import com.moptra.invoice.tenants.dto.res.ProjectResponse;
-import com.moptra.invoice.tenants.service.ProjectService;
+import com.moptra.invoice.project.dto.req.ProjectRequest;
+import com.moptra.invoice.project.dto.res.ProjectResponse;
+import com.moptra.invoice.project.service.ProjectService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
