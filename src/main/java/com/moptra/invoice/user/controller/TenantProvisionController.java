@@ -1,5 +1,5 @@
 package com.moptra.invoice.user.controller;
-import com.moptra.invoice.user.entities.mongo.TenantConfigEntity;
+import com.moptra.invoice.user.entities.nrd.TenantConfigEntity;
 import com.moptra.invoice.user.service.TenantMongoProvisioningServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

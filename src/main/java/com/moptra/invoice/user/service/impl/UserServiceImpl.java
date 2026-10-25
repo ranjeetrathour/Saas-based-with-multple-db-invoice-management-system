@@ -1,30 +1,19 @@
 package com.moptra.invoice.user.service.impl;
 
 import com.moptra.invoice.authentication.security.CustomUserDetails;
-import com.moptra.invoice.authentication.service.JwtService;
 import com.moptra.invoice.comman.mappers.GenericMapper;
 import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
 import com.moptra.invoice.tenants.context.TenantContext;
-import com.moptra.invoice.tenants.entites.rd.Company;
-import com.moptra.invoice.tenants.enums.AccountStatus;
-import com.moptra.invoice.tenants.repository.rd.CompanyRepository;
 import com.moptra.invoice.tenants.service.TenantUserInitializerService;
 import com.moptra.invoice.user.dto.req.CreateEmployeeRequest;
 import com.moptra.invoice.user.entities.rd.Employee;
 import com.moptra.invoice.user.entities.rd.User;
-import com.moptra.invoice.user.entities.rd.UserIdentity;
-import com.moptra.invoice.user.repository.rd.UserIdentityRepository;
-import com.moptra.invoice.user.repository.rd.UserRepository;
 import com.moptra.invoice.user.service.MasterUserIdentityService;
 import com.moptra.invoice.user.service.UserService;
 import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 public class UserServiceImpl extends BaseServiceImpl<User, String> implements UserService {

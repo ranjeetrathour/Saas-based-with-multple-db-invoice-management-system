@@ -1,7 +1,7 @@
 package com.moptra.invoice.client.service.impl;
 
 import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
-import com.moptra.invoice.client.entity.rd.ClientBranch;
+import com.moptra.invoice.client.entities.ClientBranch;
 import com.moptra.invoice.client.service.ClientBranchService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;

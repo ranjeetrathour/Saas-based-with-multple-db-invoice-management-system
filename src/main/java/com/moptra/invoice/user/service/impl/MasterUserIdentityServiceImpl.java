@@ -3,7 +3,7 @@ package com.moptra.invoice.user.service.impl;
 import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
 import com.moptra.invoice.tenants.entites.rd.Company;
 import com.moptra.invoice.tenants.enums.AccountStatus;
-import com.moptra.invoice.tenants.repository.rd.CompanyRepository;
+import com.moptra.invoice.tenants.repository.CompanyRepository;
 import com.moptra.invoice.user.dto.req.CreateEmployeeRequest;
 import com.moptra.invoice.user.entities.rd.UserIdentity;
 import com.moptra.invoice.user.service.MasterUserIdentityService;

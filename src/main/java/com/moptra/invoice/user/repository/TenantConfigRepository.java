@@ -1,6 +1,6 @@
 package com.moptra.invoice.user.repository;
 
-import com.moptra.invoice.user.entities.mongo.TenantConfigEntity;
+import com.moptra.invoice.user.entities.nrd.TenantConfigEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

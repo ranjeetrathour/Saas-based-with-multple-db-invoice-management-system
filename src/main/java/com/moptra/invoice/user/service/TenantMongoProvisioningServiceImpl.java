@@ -3,7 +3,7 @@ package com.moptra.invoice.user.service;
 
 import com.mongodb.client.MongoClient;
 import com.moptra.invoice.tenants.context.TenantContext;
-import com.moptra.invoice.user.entities.mongo.TenantConfigEntity;
+import com.moptra.invoice.user.entities.nrd.TenantConfigEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;

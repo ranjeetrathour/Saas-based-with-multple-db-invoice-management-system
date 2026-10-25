@@ -18,8 +18,10 @@ import java.util.Map;
 @Configuration
 @EnableJpaRepositories(
         basePackages = {
-                "com.moptra.invoice.tenants.repository.rd",
-                "com.moptra.invoice.user.repository.rd"
+                "com.moptra.invoice.tenants.repository",
+                "com.moptra.invoice.user.repository",
+                "com.moptra.invoice.client.repository",
+                "com.moptra.invoice.project.repository",
         },
         entityManagerFactoryRef = "rdEntityManagerFactory",
         transactionManagerRef = "rdTransactionManager"
@@ -45,7 +47,9 @@ public class JpaConfiguration {
         factory.setJpaVendorAdapter(vendorAdapter);
         factory.setPackagesToScan(
                 "com.moptra.invoice.tenants.entites.rd",
-                "com.moptra.invoice.user.entities.rd"
+                "com.moptra.invoice.user.entities.rd",
+                "com.moptra.invoice.client.entities",
+                "com.moptra.invoice.project.entites"
         );
         Map<String, Object> jpaPropertiesMap = new HashMap<>(jpaProperties.getProperties());
         jpaPropertiesMap.put("hibernate.ddl-auto", "validate");

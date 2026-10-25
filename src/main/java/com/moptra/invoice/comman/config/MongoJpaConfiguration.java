@@ -15,8 +15,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @Configuration
 @EnableMongoRepositories(
         basePackages = {
-                "com.moptra.invoice.tenants.repository.nrd",
-                "com.moptra.invoice.user.repository.nrd"
+                "com.moptra.invoice.timesheet.repository"
         },
         mongoTemplateRef = "mongoTemplate"
 )

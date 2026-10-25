@@ -2,7 +2,7 @@ package com.moptra.invoice.tenants.service.impl;
 
 import com.moptra.invoice.tenants.config.TenantDataSourceRouter;
 import com.moptra.invoice.tenants.entites.rd.TenantDatabase;
-import com.moptra.invoice.tenants.repository.rd.TenantDatabaseRepository;
+import com.moptra.invoice.tenants.repository.TenantDatabaseRepository;
 import com.moptra.invoice.tenants.service.TenantConfigService;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
