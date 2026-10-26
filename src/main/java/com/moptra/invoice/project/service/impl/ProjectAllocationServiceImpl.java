@@ -1,16 +1,22 @@
 package com.moptra.invoice.project.service.impl;
 
+import com.moptra.invoice.authentication.security.CustomUserDetails;
 import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
 import com.moptra.invoice.project.dto.req.ProjectAllocationRequest;
+import com.moptra.invoice.project.dto.res.EmployeeActiveProjectResponse;
 import com.moptra.invoice.project.entites.Project;
 import com.moptra.invoice.project.entites.ProjectAllocation;
+import com.moptra.invoice.project.repository.ProjectAllocationRepository;
 import com.moptra.invoice.project.repository.ProjectRepository;
 import com.moptra.invoice.project.service.ProjectAllocationService;
 import com.moptra.invoice.user.entities.rd.Employee;
+import com.moptra.invoice.user.entities.rd.User;
 import com.moptra.invoice.user.repository.EmployeeRepository;
+import com.moptra.invoice.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,11 +30,15 @@ public class ProjectAllocationServiceImpl extends BaseServiceImpl<ProjectAllocat
 
     private final ProjectRepository projectRepository;
     private final EmployeeRepository employeeRepository;
+    private final UserRepository userRepository;
+    private final ProjectAllocationRepository projectAllocationRepository;
 
-    public ProjectAllocationServiceImpl(JpaRepository<ProjectAllocation, String> repository, ProjectRepository projectRepository, EmployeeRepository employeeRepository) {
+    public ProjectAllocationServiceImpl(JpaRepository<ProjectAllocation, String> repository, ProjectRepository projectRepository, EmployeeRepository employeeRepository, UserRepository userRepository, ProjectAllocationRepository projectAllocationRepository) {
         super(repository);
         this.projectRepository = projectRepository;
         this.employeeRepository = employeeRepository;
+        this.userRepository = userRepository;
+        this.projectAllocationRepository = projectAllocationRepository;
     }
 
     @Override
@@ -73,5 +83,20 @@ public class ProjectAllocationServiceImpl extends BaseServiceImpl<ProjectAllocat
         save(allocation);
 
         log.info("Project allocation created successfully");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EmployeeActiveProjectResponse getLoggedInUserCurrentActiveProject() {
+        CustomUserDetails principal = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal == null || principal.getEmail() == null) {
+
+        }
+        User byEmail = userRepository.findByEmail(principal.getEmail()).orElseThrow(() -> new RuntimeException());
+        var loggedInUserCurrentProject = projectAllocationRepository.findByEmployeeIdAndISActiveTrue(byEmail.getEmployee().getId()).orElseThrow(() -> new RuntimeException());
+        return EmployeeActiveProjectResponse.builder()
+                .projectCode(loggedInUserCurrentProject.getProject().getProjectCode())
+                .name(loggedInUserCurrentProject.getProject().getName())
+                .build();
     }
 }

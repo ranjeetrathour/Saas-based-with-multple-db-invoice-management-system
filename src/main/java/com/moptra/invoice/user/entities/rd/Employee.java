@@ -38,7 +38,8 @@ public class Employee extends BaseEntity {
     private LocalDate joiningDate;
 
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", unique = true)
+    @ToString.Exclude
     private User user;
 }
