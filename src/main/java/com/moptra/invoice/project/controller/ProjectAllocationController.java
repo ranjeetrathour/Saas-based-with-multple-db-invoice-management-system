@@ -21,6 +21,10 @@ public class ProjectAllocationController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+    /**
+     * this is used for ui purpose while creating or inserting timesheet
+     * @return
+     */
     @GetMapping("/active-project")
     public ResponseEntity<EmployeeActiveProjectResponse> getLoggedInEmployeeActiveAllocatedProject(){
         EmployeeActiveProjectResponse loggedInUserCurrentActiveProject = projectAllocationService.getLoggedInUserCurrentActiveProject();
