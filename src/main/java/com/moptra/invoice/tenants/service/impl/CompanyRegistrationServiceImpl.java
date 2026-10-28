@@ -23,6 +23,7 @@ import com.moptra.invoice.user.enums.IdentityType;
 import com.moptra.invoice.user.enums.UserRole;
 import com.moptra.invoice.user.repository.UserIdentityRepository;
 
+import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -64,6 +65,12 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
         this.branchService = branchService;
     }
 
+    /**
+     * need to add some validation like not all person can onboard tenant
+     * and only tenant admin can add or onboard new branch
+     * @param request
+     * @return
+     */
     @Override
     @Transactional
     public RegisterCompanyResponse register(RegisterCompanyRequest request) {
@@ -169,7 +176,7 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
         }
     }
 
-    private void validateRequest(RegisterCompanyRequest request) {
+    private void validateRequest(@Nonnull RegisterCompanyRequest request) {
         if (companyRepository.existsByCompanyEmail(request.getCompanyEmail())) {
             throw new IllegalArgumentException("Company email already exists");
         }

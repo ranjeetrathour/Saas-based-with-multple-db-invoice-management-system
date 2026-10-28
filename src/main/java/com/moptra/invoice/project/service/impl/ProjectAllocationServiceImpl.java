@@ -1,6 +1,7 @@
 package com.moptra.invoice.project.service.impl;
 
 import com.moptra.invoice.authentication.security.CustomUserDetails;
+import com.moptra.invoice.comman.exception.GenericException;
 import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
 import com.moptra.invoice.project.dto.req.ProjectAllocationRequest;
 import com.moptra.invoice.project.dto.res.EmployeeActiveProjectResponse;
@@ -48,23 +49,23 @@ public class ProjectAllocationServiceImpl extends BaseServiceImpl<ProjectAllocat
 
         if (Objects.isNull(request)) {
             log.warn("Project allocation failed: request is null");
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Project allocation request cannot be null");
+            throw new GenericException(HttpStatus.BAD_REQUEST.value(), "Project allocation failed: request is null");
         }
 
         if (request.getEmployee().getId() == null || request.getEmployee().getId().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Employee ID is required");
+            throw new GenericException(HttpStatus.BAD_REQUEST.value(), "Employee ID is required");
         }
 
         if (request.getProject().getId() == null || request.getProject().getId().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Project ID is required");
+            throw new GenericException(HttpStatus.BAD_REQUEST.value(), "Project ID is required");
         }
 
         if (request.getBillingHourlyRate() == null || request.getBillingHourlyRate().compareTo(BigDecimal.ZERO) < 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Billing hourly rate must be zero or greater");
+            throw new GenericException(HttpStatus.BAD_REQUEST.value(), "Billing hourly rate must be zero or greater");
         }
 
         if (request.getStartDate() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date is required");
+            throw new GenericException(HttpStatus.BAD_REQUEST.value(), "Start date is required");
         }
 
         Employee employee = employeeRepository.findById(request.getEmployee().getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found"));
@@ -89,10 +90,12 @@ public class ProjectAllocationServiceImpl extends BaseServiceImpl<ProjectAllocat
     @Transactional(readOnly = true)
     public EmployeeActiveProjectResponse getLoggedInUserCurrentActiveProject() {
         CustomUserDetails principal = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal == null || principal.getEmail() == null) {
 
+        if (Objects.isNull(principal)){
+            throw new GenericException(HttpStatus.UNAUTHORIZED.value(), "logged in user details is null");
         }
-        User byEmail = userRepository.findByEmail(principal.getEmail()).orElseThrow(() -> new RuntimeException());
+
+        User byEmail = userRepository.findByEmail(principal.getEmail()).orElseThrow(() -> new GenericException(HttpStatus.NOT_FOUND.value(), String.format("user not fount with %S",principal.getEmail())));
         var loggedInUserCurrentProject = projectAllocationRepository.findByEmployeeIdAndISActiveTrue(byEmail.getEmployee().getId()).orElseThrow(() -> new RuntimeException());
         return EmployeeActiveProjectResponse.builder()
                 .projectCode(loggedInUserCurrentProject.getProject().getProjectCode())

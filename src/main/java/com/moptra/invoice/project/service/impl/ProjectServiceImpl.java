@@ -33,6 +33,11 @@ public class ProjectServiceImpl extends BaseServiceImpl<Project, String> impleme
         this.branchRepository = branchRepository;
     }
 
+    /**
+     * add validation like company id is valid or not
+     * @param projectRequest
+     * @return
+     */
     @Override
     @Transactional
     public ProjectResponse insertProjectEntry(ProjectRequest projectRequest) {

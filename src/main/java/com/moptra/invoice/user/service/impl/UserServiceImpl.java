@@ -28,6 +28,10 @@ public class UserServiceImpl extends BaseServiceImpl<User, String> implements Us
         this.tenantUserInitializerService = tenantUserInitializerService;
     }
 
+    /**
+     * while creating user we need to add validation , both email domain must be same or other as well need to disscuss
+     * @param request
+     */
     @Override
     public void createUser(@NonNull CreateEmployeeRequest request) {
         // 1. Get currently logged-in Admin's details from SecurityContext
