@@ -1,6 +1,7 @@
 
 package com.moptra.invoice.timesheet.service.impl;
 
+import com.moptra.invoice.comman.exception.GenericException;
 import com.moptra.invoice.comman.mappers.GenericMapper;
 import com.moptra.invoice.timesheet.dto.req.TimesheetRequest;
 import com.moptra.invoice.timesheet.dto.req.TimesheetRowRequest;
@@ -12,6 +13,7 @@ import com.moptra.invoice.timesheet.service.TimesheetService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -36,7 +38,7 @@ public class TimesheetServiceImpl implements TimesheetService {
     public TimesheetResponse saveOrUpdateDraft(TimesheetRequest request) {
 
         if (request == null) {
-            throw new IllegalArgumentException("Timesheet request must not be null");
+            throw new GenericException(HttpStatus.BAD_REQUEST.value(),"Timesheet request must not be null");
         }
         log.info("Mongo database: {}", mongoTemplate.getDb().getName());
         Optional<TimesheetDocument> existing = timesheetRepository.findByEmployeeIdAndWeekStartDate(request.employeeId(), request.weekStartDate());
@@ -47,7 +49,7 @@ public class TimesheetServiceImpl implements TimesheetService {
             document = existing.get();
 
             if ("SUBMITTED".equalsIgnoreCase(document.getStatus())) {
-                throw new IllegalStateException("A submitted timesheet cannot be updated");
+                throw new GenericException(HttpStatus.BAD_REQUEST.value(), "A submitted timesheet cannot be updated");
             }
 
             // Update the existing document's fields.

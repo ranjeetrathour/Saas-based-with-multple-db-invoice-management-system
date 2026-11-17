@@ -1,35 +1,37 @@
 package com.moptra.invoice.tenants.service.impl;
 
+import com.moptra.invoice.authentication.security.CustomUserDetails;
+import com.moptra.invoice.authentication.utils.SecurityUtils;
+import com.moptra.invoice.comman.exception.GenericException;
+import com.moptra.invoice.comman.mappers.GenericMapper;
 import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
 import com.moptra.invoice.tenants.context.TenantContext;
+import com.moptra.invoice.tenants.dto.req.BranchRequest;
 import com.moptra.invoice.tenants.dto.req.RegisterCompanyRequest;
+import com.moptra.invoice.tenants.dto.res.BranchResponse;
 import com.moptra.invoice.tenants.dto.res.RegisterCompanyResponse;
+import com.moptra.invoice.tenants.dto.res.TenantDetailsResponse;
 import com.moptra.invoice.tenants.entites.rd.Branch;
 import com.moptra.invoice.tenants.entites.rd.Company;
 import com.moptra.invoice.tenants.entites.rd.TenantDatabase;
-import com.moptra.invoice.tenants.enums.AccountStatus;
 import com.moptra.invoice.tenants.enums.CompanyStatus;
 import com.moptra.invoice.tenants.enums.TenantDatabaseStatus;
 import com.moptra.invoice.tenants.provisioning.TenantDatabaseProvisioningService;
 import com.moptra.invoice.tenants.provisioning.TenantMongoProvisioningService;
+import com.moptra.invoice.tenants.repository.BranchRepository;
 import com.moptra.invoice.tenants.repository.CompanyRepository;
 import com.moptra.invoice.tenants.repository.TenantDatabaseRepository;
-import com.moptra.invoice.tenants.service.BranchService;
-import com.moptra.invoice.tenants.service.CompanyRegistrationService;
-import com.moptra.invoice.tenants.service.TenantConfigService;
-import com.moptra.invoice.tenants.service.TenantUserInitializerService;
+import com.moptra.invoice.tenants.service.*;
 import com.moptra.invoice.user.entities.rd.UserIdentity;
-import com.moptra.invoice.user.enums.IdentityType;
-import com.moptra.invoice.user.enums.UserRole;
 import com.moptra.invoice.user.repository.UserIdentityRepository;
 
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -41,9 +43,9 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
     private final TenantDatabaseProvisioningService tenantDatabaseProvisioningService;
     private final TenantConfigService tenantConfigService;
     private final TenantUserInitializerService tenantUserInitializerService;
-    private final PasswordEncoder passwordEncoder;
     private final TenantMongoProvisioningService tenantMongoProvisioningService;
-    private final BranchService branchService;
+    private final BranchRepository branchRepository;
+    private final MasterCompanyRegistrationService masterCompanyRegistrationService;
 
     public CompanyRegistrationServiceImpl(
             CompanyRepository companyRepository,
@@ -52,7 +54,7 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
             TenantDatabaseProvisioningService tenantDatabaseProvisioningService,
             TenantConfigService tenantConfigService,
             TenantUserInitializerService tenantUserInitializerService,
-            PasswordEncoder passwordEncoder, TenantMongoProvisioningService tenantMongoProvisioningService, BranchService branchService) {
+            TenantMongoProvisioningService tenantMongoProvisioningService,  BranchRepository branchRepository, MasterCompanyRegistrationService masterCompanyRegistrationService) {
         super(companyRepository);
         this.companyRepository = companyRepository;
         this.userIdentityRepository = userIdentityRepository;
@@ -60,9 +62,9 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
         this.tenantDatabaseProvisioningService = tenantDatabaseProvisioningService;
         this.tenantConfigService = tenantConfigService;
         this.tenantUserInitializerService = tenantUserInitializerService;
-        this.passwordEncoder = passwordEncoder;
         this.tenantMongoProvisioningService = tenantMongoProvisioningService;
-        this.branchService = branchService;
+        this.branchRepository = branchRepository;
+        this.masterCompanyRegistrationService = masterCompanyRegistrationService;
     }
 
     /**
@@ -74,51 +76,22 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
     @Override
     @Transactional
     public RegisterCompanyResponse register(RegisterCompanyRequest request) {
+
+        /**
+         * later this must be checked by company domain
+         */
+        if (companyRepository.findByCompanyName(request.getCompanyName())){
+            throw new GenericException(HttpStatus.BAD_REQUEST.value(), "Company Already Register With This Domain You Can Add New Branch");
+        }
+
         validateRequest(request);
 
-        // 1. Save Company In Master DB
-        Company company = Company.builder()
-                .companyName(request.getCompanyName())
-                .companyCode(request.getCompanyCode())
-                .companyEmail(request.getCompanyEmail())
-                .companyPhone(request.getCompanyPhone())
-                .status(CompanyStatus.PROVISIONING)
-                .build();
-        company = save(company);
-
-        // 2. Map and Save Branches associated with the Company
-        final Company savedCompany = company;
-        var branches = request.getBranches().stream()
-                .map(branchReq -> Branch.builder()
-                        .company(savedCompany)
-                        .branchName(branchReq.getBranchName())
-                        .branchCode(branchReq.getBranchCode())
-                        .gstNo(branchReq.getGstNo())
-                        .branchAddress(branchReq.getBranchAddress())
-                        .branchCity(branchReq.getBranchCity())
-                        .branchCountry(branchReq.getBranchCountry())
-                        .isActive(true)
-                        .build())
-                .collect(Collectors.toList());
-
-        branchService.saveBranches(branches);
-        log.info("Company and its {} branches registered successfully in Master DB", branches.size());
+        Company companySavedInMasterDb = masterCompanyRegistrationService.createCompany(request);
 
         log.info("Company registered successfully in Master DB");
-        String sanitizedCompanyName = company.getCompanyCode().toLowerCase().replaceAll("[^a-z0-9]", "_");
+        String sanitizedCompanyName = companySavedInMasterDb.getCompanyCode().toLowerCase().replaceAll("[^a-z0-9]", "_");
         String databaseName = "tenant_" + sanitizedCompanyName;
-
-        TenantDatabase tenantDatabase = TenantDatabase.builder()
-                .company(company)
-                .databaseName(databaseName)
-                .host("localhost")
-                .port(5432)
-                .username("postgres")
-                .password("postgres")
-                .status(TenantDatabaseStatus.PROVISIONING)
-                .build();
-        tenantDatabase = tenantDatabaseRepository.save(tenantDatabase);
-        log.info("Tenant DB metadata details saved in Master DB");
+        TenantDatabase tenantDatabase = masterCompanyRegistrationService.registerTenantDbDetails(companySavedInMasterDb, databaseName);
 
         try {
             // 2. Create dynamic physical database (later it take complete request so it can create database on the user server)
@@ -129,18 +102,9 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
 
             log.info("db created and migration run success ");
             // 4. Save UserIdentity in master db for login
-            UserIdentity identity = UserIdentity.builder()
-                    .company(company)
-                    .name(request.getAdminName())
-                    .email(request.getAdminEmail())
-                    .passwordHash(passwordEncoder.encode(request.getPassword()))
-                    .role(UserRole.COMPANY_ADMIN)
-                    .status(AccountStatus.ACTIVE)
-                    .identityType(IdentityType.TENANT)
-                    .build();
-            identity = userIdentityRepository.save(identity);
+            UserIdentity userIdentityInMasterDbForLogin = masterCompanyRegistrationService.createUserIdentityInMasterDbForLogin(companySavedInMasterDb, request);
 
-            log.info("User identity saved in Master DB: {}", identity.getEmail());
+            log.info("User identity saved in Master DB: {}", userIdentityInMasterDbForLogin.getEmail());
 
             // 5. Save Tenant User (Context set before invoking REQUIRES_NEW transaction)
             try {
@@ -156,29 +120,83 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
             tenantDatabase.setStatus(TenantDatabaseStatus.ACTIVE);
             tenantDatabaseRepository.save(tenantDatabase);
 
-            company.setStatus(CompanyStatus.ACTIVE);
-            save(company);
+            companySavedInMasterDb.setStatus(CompanyStatus.ACTIVE);
+            save(companySavedInMasterDb);
 
             return RegisterCompanyResponse.builder()
-                    .companyName(company.getCompanyName())
-                    .adminEmail(identity.getEmail())
-                    .status(company.getStatus().name())
+                    .companyName(companySavedInMasterDb.getCompanyName())
+                    .adminEmail(userIdentityInMasterDbForLogin.getEmail())
+                    .status(companySavedInMasterDb.getStatus().name())
                     .message("Company registered successfully.")
                     .build();
 
         } catch (Exception exception) {
             log.error("Error during company registration: ", exception);
-            company.setStatus(CompanyStatus.PROVISIONING_FAILED);
-            save(company);
-            tenantDatabase.setStatus(TenantDatabaseStatus.FAILED);
-            tenantDatabaseRepository.save(tenantDatabase);
+            masterCompanyRegistrationService.markProvisioningFailed(companySavedInMasterDb.getId(), tenantDatabase.getId());
             throw new RuntimeException("Company registration failed: " + exception.getMessage(), exception);
         }
     }
 
+    /**
+     * need to check permission first
+     */
+    @Override
+    public BranchResponse addBranches(@Nonnull BranchRequest branchRequest, String id) {
+
+        if (branchRepository.findByBranchCode(branchRequest.getBranchCode())) {
+            throw new RuntimeException("Branch code already exists");
+        }
+
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new GenericException(HttpStatus.NOT_FOUND.value(),"Company not found"));
+
+        Branch branch = GenericMapper.map(branchRequest, Branch.class);
+
+        branch.setCompany(company);
+
+        Branch savedBranch = branchRepository.save(branch);
+
+        return GenericMapper.map(savedBranch, BranchResponse.class);
+    }
+
+    @Override
+    public TenantDetailsResponse getTenantDetails() {
+        CustomUserDetails user = SecurityUtils.getCurrentUser();
+        Company company;
+        List<Branch> branches;
+        try {
+            TenantContext.setTenantId("master");
+            company = companyRepository.findById(user.getCompanyId()).orElseThrow(() -> new GenericException(HttpStatus.NOT_FOUND.value(), "Company not found"));
+            branches = branchRepository.findByCompanyId(company.getId());
+        } finally {
+            TenantContext.clear();
+        }
+
+        List<BranchResponse> branchResponses = branches.stream()
+                .map(branch -> new BranchResponse(
+                        branch.getId(),
+                        branch.getBranchCode(),
+                        branch.getBranchAddress(),
+                        branch.getBranchCity(),
+                        branch.getBranchCountry()
+                ))
+                .toList();
+
+        return new TenantDetailsResponse(
+                company.getId(),
+                company.getCompanyName(),
+                company.getCompanyCode(),
+                company.getCompanyEmail(),
+                company.getCompanyPhone(),
+                company.getWebsite(),
+                company.getStatus().name(),
+                branchResponses
+        );
+    }
+
     private void validateRequest(@Nonnull RegisterCompanyRequest request) {
         if (companyRepository.existsByCompanyEmail(request.getCompanyEmail())) {
-            throw new IllegalArgumentException("Company email already exists");
+            throw new IllegalArgumentException("Company already exists");
         }
         if (userIdentityRepository.existsByEmail(request.getAdminEmail())) {
             throw new IllegalArgumentException("Admin email already exists");

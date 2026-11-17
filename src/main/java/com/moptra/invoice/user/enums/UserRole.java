@@ -1,7 +1,7 @@
 package com.moptra.invoice.user.enums;
 
 /**
- * it need to be change after
+ * it needs to be changed after
  */
 public enum UserRole {
 
