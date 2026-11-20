@@ -1,8 +1,12 @@
 package com.moptra.invoice.tenants.enums;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
- * this will be used when user give it's own db related details will try to hit or ping
+ * Status of tenant database provisioning or connectivity check.
+ * FUTURE CHANGE POINT: Add MAINTENANCE or ROTATING_CREDENTIALS if DB maintenance states are tracked.
  */
+@Schema(description = "Status of tenant database provisioning/connectivity")
 public enum TenantDatabaseStatus {
     PROVISIONING,
     ACTIVE,

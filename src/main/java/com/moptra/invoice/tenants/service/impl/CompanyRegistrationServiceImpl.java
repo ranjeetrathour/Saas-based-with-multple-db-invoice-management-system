@@ -21,10 +21,12 @@ import com.moptra.invoice.tenants.provisioning.TenantMongoProvisioningService;
 import com.moptra.invoice.tenants.repository.BranchRepository;
 import com.moptra.invoice.tenants.repository.CompanyRepository;
 import com.moptra.invoice.tenants.repository.TenantDatabaseRepository;
-import com.moptra.invoice.tenants.service.*;
+import com.moptra.invoice.tenants.service.CompanyRegistrationService;
+import com.moptra.invoice.tenants.service.MasterCompanyRegistrationService;
+import com.moptra.invoice.tenants.service.TenantConfigService;
+import com.moptra.invoice.tenants.service.TenantUserInitializerService;
 import com.moptra.invoice.user.entities.rd.UserIdentity;
 import com.moptra.invoice.user.repository.UserIdentityRepository;
-
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -33,6 +35,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Handles Main Tenant / Service Provider (Vendor) registration (e.g., Shyftlab),
+ * physical/logical tenant database + MongoDB provisioning, initial admin setup,
+ * and vendor internal branch management[cite: 1, 2, 3].
+ *
+ * FLOW CONTEXT:
+ * 1. Main Tenant (Vendor, e.g., Shyftlab) registers here first[cite: 1].
+ * 2. After tenant is active, vendor creates internal staff (HR, Finance, Managers, Devs)
+ *    and onboards Client Companies (e.g., Petco) with restricted Client Portal users[cite: 1, 2].
+ * 3. Client creates Projects & per-employee SOWs; Vendor/Client allocates employees[cite: 1].
+ *
+ * FUTURE CHANGE POINT:
+ * - Enforce strict RBAC/permission checks (e.g., SAAS_ADMIN / COMPANY_ADMIN) before onboarding/branching[cite: 3].
+ * - Seed default vendor roles/departments/designations in the new tenant DB right after provisioning[cite: 4].
+ */
 @Slf4j
 @Service
 public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, String> implements CompanyRegistrationService {
@@ -54,7 +71,9 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
             TenantDatabaseProvisioningService tenantDatabaseProvisioningService,
             TenantConfigService tenantConfigService,
             TenantUserInitializerService tenantUserInitializerService,
-            TenantMongoProvisioningService tenantMongoProvisioningService,  BranchRepository branchRepository, MasterCompanyRegistrationService masterCompanyRegistrationService) {
+            TenantMongoProvisioningService tenantMongoProvisioningService,
+            BranchRepository branchRepository,
+            MasterCompanyRegistrationService masterCompanyRegistrationService) {
         super(companyRepository);
         this.companyRepository = companyRepository;
         this.userIdentityRepository = userIdentityRepository;
@@ -68,55 +87,57 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
     }
 
     /**
-     * need to add some validation like not all person can onboard tenant
-     * and only tenant admin can add or onboard new branch
-     * @param request
-     * @return
+     * Registers a new Main Tenant / Vendor company in Master DB, provisions its relational
+     * and MongoDB databases, creates login UserIdentity + initial Tenant Admin, and marks
+     * the company ACTIVE[cite: 1, 2, 3].
+     *
+     * FUTURE CHANGE POINT: Add domain-level duplicate checks and seed default RBAC roles
+     * (HR, FINANCE, MANAGER, EMPLOYEE) inside the newly provisioned tenant database[cite: 3, 4].
      */
     @Override
     @Transactional
     public RegisterCompanyResponse register(RegisterCompanyRequest request) {
-
-        /**
-         * later this must be checked by company domain
-         */
-        if (companyRepository.findByCompanyName(request.getCompanyName())){
-            throw new GenericException(HttpStatus.BAD_REQUEST.value(), "Company Already Register With This Domain You Can Add New Branch");
-        }
-
         validateRequest(request);
 
+        // 1. Persist Main Tenant / Vendor company record in Master DB
         Company companySavedInMasterDb = masterCompanyRegistrationService.createCompany(request);
+        log.info("Vendor/Tenant company '{}' registered in Master DB with id={}", companySavedInMasterDb.getCompanyName(), companySavedInMasterDb.getId());
 
-        log.info("Company registered successfully in Master DB");
-        String sanitizedCompanyName = companySavedInMasterDb.getCompanyCode().toLowerCase().replaceAll("[^a-z0-9]", "_");
-        String databaseName = "tenant_" + sanitizedCompanyName;
-        TenantDatabase tenantDatabase = masterCompanyRegistrationService.registerTenantDbDetails(companySavedInMasterDb, databaseName);
+        String sanitizedCompanyCode = companySavedInMasterDb.getCompanyCode()
+                .toLowerCase()
+                .replaceAll("[^a-z0-9]", "_");
+        String databaseName = "tenant_" + sanitizedCompanyCode;
+
+        TenantDatabase tenantDatabase = masterCompanyRegistrationService
+                .registerTenantDbDetails(companySavedInMasterDb, databaseName);
 
         try {
-            // 2. Create dynamic physical database (later it take complete request so it can create database on the user server)
+            // 2. Provision relational DB, run migrations, register DataSource, and init MongoDB
             tenantDatabaseProvisioningService.createDatabase(databaseName);
-            // 3. Register tenant DataSource & execute Flyway migrations
             tenantConfigService.registerNewTenant(tenantDatabase);
             tenantMongoProvisioningService.createDataBase(databaseName);
+            log.info("Relational and MongoDB databases provisioned for tenant DB '{}'", databaseName);
 
-            log.info("db created and migration run success ");
-            // 4. Save UserIdentity in master db for login
+            // 3. Save login identity in Master DB (scoping to Vendor tenant)
             UserIdentity userIdentityInMasterDbForLogin = masterCompanyRegistrationService.createUserIdentityInMasterDbForLogin(companySavedInMasterDb, request);
+            log.info("Master login UserIdentity saved for email '{}'", userIdentityInMasterDbForLogin.getEmail());
 
-            log.info("User identity saved in Master DB: {}", userIdentityInMasterDbForLogin.getEmail());
-
-            // 5. Save Tenant User (Context set before invoking REQUIRES_NEW transaction)
+            // 4. Create initial Tenant Admin inside the tenant DB
+            String previousTenantId = TenantContext.getTenantId();
             try {
                 TenantContext.setTenantId(databaseName);
-                log.info("Tenant context set to {} prior to transaction start", TenantContext.getTenantId());
+                log.info("Switched TenantContext to '{}' for initial admin creation", databaseName);
                 tenantUserInitializerService.createTenantAdminUser(databaseName, request);
             } finally {
-                TenantContext.setTenantId("master");
-                log.info("Current DB context restored to: {}", TenantContext.getTenantId());
+                if (previousTenantId != null) {
+                    TenantContext.setTenantId(previousTenantId);
+                } else {
+                    TenantContext.setTenantId("master");
+                }
+                log.info("Restored TenantContext to '{}'", TenantContext.getTenantId());
             }
 
-            // 6. Update Statuses in Master DB
+            // 5. Activate TenantDatabase and Company statuses in Master DB
             tenantDatabase.setStatus(TenantDatabaseStatus.ACTIVE);
             tenantDatabaseRepository.save(tenantDatabase);
 
@@ -124,6 +145,8 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
             save(companySavedInMasterDb);
 
             return RegisterCompanyResponse.builder()
+                    .companyId(companySavedInMasterDb.getId())
+                    .userId(userIdentityInMasterDbForLogin.getId())
                     .companyName(companySavedInMasterDb.getCompanyName())
                     .adminEmail(userIdentityInMasterDbForLogin.getEmail())
                     .status(companySavedInMasterDb.getStatus().name())
@@ -131,39 +154,53 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
                     .build();
 
         } catch (Exception exception) {
-            log.error("Error during company registration: ", exception);
+            log.info("Error during company registration for '{}': ", request.companyName(), exception);
             masterCompanyRegistrationService.markProvisioningFailed(companySavedInMasterDb.getId(), tenantDatabase.getId());
-            throw new RuntimeException("Company registration failed: " + exception.getMessage(), exception);
+            throw new GenericException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Company registration failed: " + exception.getMessage());
         }
     }
 
     /**
-     * need to check permission first
+     * Adds a new internal branch to a Main Tenant / Vendor company[cite: 1, 3].
+     *
+     * FUTURE CHANGE POINT: Enforce that only an authorized COMPANY_ADMIN of the matching
+     * company (or SAAS_ADMIN) can add branches, and ensure tenant/master DB routing is explicit[cite: 3].
      */
     @Override
-    public BranchResponse addBranches(@Nonnull BranchRequest branchRequest, String id) {
-
-        if (branchRepository.findByBranchCode(branchRequest.getBranchCode())) {
-            throw new RuntimeException("Branch code already exists");
+    @Transactional
+    public BranchResponse addBranches(@Nonnull BranchRequest branchRequest, String companyId) {
+        if (branchRepository.findByBranchCode(branchRequest.branchCode())) {
+            throw new GenericException(HttpStatus.CONFLICT.value(), "Branch code already exists: " + branchRequest.branchCode());
         }
 
-        Company company = companyRepository.findById(id)
-                .orElseThrow(() -> new GenericException(HttpStatus.NOT_FOUND.value(),"Company not found"));
+        Company company = companyRepository.findById(companyId).orElseThrow(() -> new GenericException(HttpStatus.NOT_FOUND.value(), "Company not found"));
 
         Branch branch = GenericMapper.map(branchRequest, Branch.class);
-
         branch.setCompany(company);
 
         Branch savedBranch = branchRepository.save(branch);
 
-        return GenericMapper.map(savedBranch, BranchResponse.class);
+        return new BranchResponse(
+                savedBranch.getId(),
+                savedBranch.getBranchCode(),
+                savedBranch.getBranchAddress(),
+                savedBranch.getBranchCity(),
+                savedBranch.getBranchCountry()
+        );
     }
 
+    /**
+     * Fetches profile and internal branches of the currently authenticated Main Tenant / Vendor company[cite: 1].
+     *
+     * FUTURE CHANGE POINT: Restrict client portal users from calling vendor-level tenant details
+     * if they should only access client portal APIs.
+     */
     @Override
     public TenantDetailsResponse getTenantDetails() {
         CustomUserDetails user = SecurityUtils.getCurrentUser();
         Company company;
         List<Branch> branches;
+
         try {
             TenantContext.setTenantId("master");
             company = companyRepository.findById(user.getCompanyId()).orElseThrow(() -> new GenericException(HttpStatus.NOT_FOUND.value(), "Company not found"));
@@ -194,12 +231,21 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
         );
     }
 
+    /**
+     * Validates duplicate company email, company code, and initial admin email before provisioning.
+     *
+     * FUTURE CHANGE POINT: Update email uniqueness check if composite uniqueness
+     * (company + clientCompany + email) is enforced for client portal users.
+     */
     private void validateRequest(@Nonnull RegisterCompanyRequest request) {
-        if (companyRepository.existsByCompanyEmail(request.getCompanyEmail())) {
-            throw new IllegalArgumentException("Company already exists");
+        if (companyRepository.existsByCompanyEmail(request.companyEmail())) {
+            throw new GenericException(HttpStatus.CONFLICT.value(), "Company email already exists");
         }
-        if (userIdentityRepository.existsByEmail(request.getAdminEmail())) {
-            throw new IllegalArgumentException("Admin email already exists");
+        if (companyRepository.existsByCompanyCode(request.companyCode())) {
+            throw new GenericException(HttpStatus.CONFLICT.value(), "Company code already exists");
+        }
+        if (userIdentityRepository.existsByEmail(request.adminEmail())) {
+            throw new GenericException(HttpStatus.CONFLICT.value(), "Admin email already exists");
         }
     }
 }

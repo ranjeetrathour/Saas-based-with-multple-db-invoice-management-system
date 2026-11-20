@@ -1,27 +1,33 @@
 package com.moptra.invoice.tenants.dto.res;
 
-import lombok.AllArgsConstructor;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-@Getter
+/**
+ * Response record returned after registering a Main Tenant / Vendor company and its initial admin.
+ * FUTURE CHANGE POINT: Remove plaintext password in production and return onboarding status/invite info.
+ */
+@Schema(description = "Response payload after main tenant (vendor) registration")
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class RegisterCompanyResponse {
+public record RegisterCompanyResponse(
+        @Schema(description = "Registered vendor company ID", example = "cmp_001")
+        String companyId,
 
-    private String companyId; //refer to pk from company entity
+        @Schema(description = "Created initial admin user ID", example = "1001")
+        String userId,
 
-    private Long userId;
+        @Schema(description = "Registered vendor company name", example = "Shyftlab")
+        String companyName,
 
-    private String companyName;
+        @Schema(description = "Initial admin login email", example = "admin@shyftlab.com")
+        String adminEmail,
 
-    private String adminEmail;
+        @Schema(description = "Avoid returning raw password in production APIs", hidden = true)
+        String password,
 
-    private String password;
+        @Schema(description = "Provisioning / company status", example = "ACTIVE")
+        String status,
 
-    private String status;
-
-    private String message;
-}
+        @Schema(description = "Human-readable onboarding status message", example = "Company and admin user created successfully")
+        String message
+) {}

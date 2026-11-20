@@ -26,8 +26,8 @@ public class TenantUserInitializerServiceImpl extends BaseServiceImpl<User, Stri
     public void createTenantAdminUser(String databaseName, RegisterCompanyRequest request) {
         log.info("Executing save inside REQUIRES_NEW transaction for tenant DB context: {}", TenantContext.getTenantId());
         User tenantUser = User.builder()
-                .name(request.getAdminName())
-                .email(request.getAdminEmail())
+                .name(request.adminName())
+                .email(request.adminEmail())
                 .role(UserRole.COMPANY_ADMIN)
                 .build();
 
