@@ -1,6 +1,7 @@
 package com.moptra.invoice.user.dto.req;
 
-import com.moptra.invoice.user.enums.UserRole;
+import com.moptra.invoice.roles.entites.UserRole;
+import com.moptra.invoice.roles.entites.UserRole;
 import lombok.Getter;
 import lombok.Setter;
 

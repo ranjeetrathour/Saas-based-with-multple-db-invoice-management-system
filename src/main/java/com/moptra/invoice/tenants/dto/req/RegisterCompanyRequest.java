@@ -37,6 +37,9 @@ public record RegisterCompanyRequest(
         @Schema(description = "Vendor website URL", example = "https://shyftlab.com")
         String website,
 
+        /**
+         * if company has no branch then the main company will treat as a branch itself (need to discussion on this)
+         */
         @NotEmpty(message = "At least one branch is required")
         @Valid
         @Schema(description = "List of internal vendor branches with GST and billing address details")

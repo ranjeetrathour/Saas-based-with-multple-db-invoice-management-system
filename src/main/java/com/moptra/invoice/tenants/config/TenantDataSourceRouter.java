@@ -1,6 +1,8 @@
 package com.moptra.invoice.tenants.config;
 
 import com.moptra.invoice.tenants.context.TenantContext;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
@@ -8,6 +10,10 @@ import javax.sql.DataSource;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ *
+ */
+@Slf4j
 public class TenantDataSourceRouter extends AbstractRoutingDataSource {
 
     private final Map<Object, DataSource> tenantDataSources = new ConcurrentHashMap<>();
@@ -33,16 +39,17 @@ public class TenantDataSourceRouter extends AbstractRoutingDataSource {
     }
 
     @Override
+    @NonNull
     protected DataSource determineTargetDataSource() {
         Object lookupKey = determineCurrentLookupKey();
-        System.out.println("DEBUG: Looking up DataSource for Tenant Key: " + lookupKey);
+        log.info("DEBUG: Looking up DataSource for Tenant Key: {}", lookupKey);
 
         DataSource ds = lookupKey != null ? tenantDataSources.get(lookupKey) : null;
         if (ds == null) {
-            System.err.println("WARNING: Tenant DataSource NOT FOUND for key [" + lookupKey + "]. Falling back to master/default DB!");
+            log.error("WARNING: Tenant DataSource NOT FOUND for key [{}]. Falling back to master/default DB!", lookupKey);
             ds = fallbackDataSource;
         } else {
-            System.out.println("SUCCESS: Found tenant DataSource for key [" + lookupKey + "]");
+            log.error("SUCCESS: Found tenant DataSource for key [{}]", lookupKey);
         }
 
         if (ds == null) {

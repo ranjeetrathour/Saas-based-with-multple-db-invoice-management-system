@@ -23,6 +23,7 @@ import java.util.Map;
                 "com.moptra.invoice.client.repository",
                 "com.moptra.invoice.project.repository",
                 "com.moptra.invoice.email.repository",
+                "com.moptra.invoice.roles.repository",
         },
         entityManagerFactoryRef = "rdEntityManagerFactory",
         transactionManagerRef = "rdTransactionManager"
@@ -51,7 +52,8 @@ public class JpaConfiguration {
                 "com.moptra.invoice.user.entities.rd",
                 "com.moptra.invoice.client.entities",
                 "com.moptra.invoice.project.entites",
-                "com.moptra.invoice.email.entites"
+                "com.moptra.invoice.email.entites",
+                "com.moptra.invoice.roles.entites"
         );
         Map<String, Object> jpaPropertiesMap = new HashMap<>(jpaProperties.getProperties());
         jpaPropertiesMap.put("hibernate.ddl-auto", "validate");

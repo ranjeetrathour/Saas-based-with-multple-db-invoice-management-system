@@ -47,9 +47,6 @@ public class CompanyOnboardingController {
     /**
      * Registers a new Main Tenant / Vendor company, provisions its relational and MongoDB
      * databases, creates initial branches, and sets up the primary COMPANY_ADMIN account.
-     *
-     * FUTURE CHANGE POINT: Enforce API key/admin guard if public self-registration is disabled
-     * in favor of invite/super-admin onboarding.
      */
     @PostMapping("/companies")
     @Operation(summary = "Register main tenant (vendor) company", description = "Onboards a vendor/tenant company, creates its branches and initial admin user, and provisions tenant databases")

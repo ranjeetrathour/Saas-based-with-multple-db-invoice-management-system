@@ -63,8 +63,7 @@ public class ClientCompanyOnboardingController {
             @ApiResponse(responseCode = "403", description = "User is not authorized to onboard client companies", content = @Content),
             @ApiResponse(responseCode = "409", description = "Client company code already exists", content = @Content)
     })
-    public ResponseEntity<ClientCompanyResponse> createClientCompany(
-            @Valid @RequestBody ClientCompanyRequest request) {
+    public ResponseEntity<ClientCompanyResponse> createClientCompany(@Valid @RequestBody ClientCompanyRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(clientCompanyService.createClientCompany(request));
     }
 }

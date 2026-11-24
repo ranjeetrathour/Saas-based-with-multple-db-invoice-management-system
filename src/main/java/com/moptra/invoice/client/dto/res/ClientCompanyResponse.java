@@ -16,6 +16,8 @@ public record ClientCompanyResponse(
         String state,
         String country,
         List<ClientBranchResponse> branches,
+        String adminName,
+        String adminEmail,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {}

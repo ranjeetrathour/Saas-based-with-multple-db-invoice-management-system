@@ -18,8 +18,7 @@ public class TenantMongoProvisioningService {
 
         try {
             // Document insert karne se MongoDB physical database create kar dega
-            database.getCollection("_init_metadata")
-                    .insertOne(new Document("status", "initialized"));
+            database.getCollection("_init_metadata").insertOne(new Document("status", "initialized"));
             log.info("Database and initial metadata created: {}", dataBaseName);
         } catch (Exception e) {
             log.error("Failed to initialize database: {}", dataBaseName, e);

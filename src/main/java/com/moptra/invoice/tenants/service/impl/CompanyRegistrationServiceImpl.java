@@ -5,6 +5,8 @@ import com.moptra.invoice.authentication.utils.SecurityUtils;
 import com.moptra.invoice.comman.exception.GenericException;
 import com.moptra.invoice.comman.mappers.GenericMapper;
 import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
+import com.moptra.invoice.roles.entites.UserRole;
+import com.moptra.invoice.roles.repository.UserRoleRepository;
 import com.moptra.invoice.tenants.context.TenantContext;
 import com.moptra.invoice.tenants.dto.req.BranchRequest;
 import com.moptra.invoice.tenants.dto.req.RegisterCompanyRequest;
@@ -63,6 +65,7 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
     private final TenantMongoProvisioningService tenantMongoProvisioningService;
     private final BranchRepository branchRepository;
     private final MasterCompanyRegistrationService masterCompanyRegistrationService;
+    private final UserRoleRepository userRoleRepository;
 
     public CompanyRegistrationServiceImpl(
             CompanyRepository companyRepository,
@@ -73,7 +76,7 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
             TenantUserInitializerService tenantUserInitializerService,
             TenantMongoProvisioningService tenantMongoProvisioningService,
             BranchRepository branchRepository,
-            MasterCompanyRegistrationService masterCompanyRegistrationService) {
+            MasterCompanyRegistrationService masterCompanyRegistrationService, UserRoleRepository userRoleRepository) {
         super(companyRepository);
         this.companyRepository = companyRepository;
         this.userIdentityRepository = userIdentityRepository;
@@ -84,6 +87,7 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
         this.tenantMongoProvisioningService = tenantMongoProvisioningService;
         this.branchRepository = branchRepository;
         this.masterCompanyRegistrationService = masterCompanyRegistrationService;
+        this.userRoleRepository = userRoleRepository;
     }
 
     /**
@@ -95,7 +99,6 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
      * (HR, FINANCE, MANAGER, EMPLOYEE) inside the newly provisioned tenant database[cite: 3, 4].
      */
     @Override
-    @Transactional
     public RegisterCompanyResponse register(RegisterCompanyRequest request) {
         validateRequest(request);
 
@@ -108,22 +111,34 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
                 .replaceAll("[^a-z0-9]", "_");
         String databaseName = "tenant_" + sanitizedCompanyCode;
 
-        TenantDatabase tenantDatabase = masterCompanyRegistrationService
-                .registerTenantDbDetails(companySavedInMasterDb, databaseName);
+        TenantDatabase tenantDatabase = masterCompanyRegistrationService.registerTenantDbDetails(companySavedInMasterDb, databaseName);
 
         try {
             // 2. Provision relational DB, run migrations, register DataSource, and init MongoDB
             tenantDatabaseProvisioningService.createDatabase(databaseName);
+            log.info("db created for the company {} ", request.companyName());
             tenantConfigService.registerNewTenant(tenantDatabase);
             tenantMongoProvisioningService.createDataBase(databaseName);
             log.info("Relational and MongoDB databases provisioned for tenant DB '{}'", databaseName);
-
+// Create initial Tenant Admin inside the tenant DB
+            String previousTenantId = TenantContext.getTenantId();
             // 3. Save login identity in Master DB (scoping to Vendor tenant)
-            UserIdentity userIdentityInMasterDbForLogin = masterCompanyRegistrationService.createUserIdentityInMasterDbForLogin(companySavedInMasterDb, request);
+            UserRole userRole;
+                try {
+                    TenantContext.setTenantId(databaseName);
+                    userRole = userRoleRepository.fetchCompanyAdminRoleData().orElseThrow(() -> new GenericException(HttpStatus.NOT_FOUND.value(), "Role not found: COMPANY_ADMIN"));
+                }finally {
+                    if (previousTenantId != null) {
+                        TenantContext.setTenantId(previousTenantId);
+                    } else {
+                        TenantContext.setTenantId("master");
+                    }
+                    log.info("Restored TenantContext to '{}'", TenantContext.getTenantId());
+                }
+            UserIdentity userIdentityInMasterDbForLogin = masterCompanyRegistrationService.createUserIdentityInMasterDbForLogin(userRole, companySavedInMasterDb, request);
             log.info("Master login UserIdentity saved for email '{}'", userIdentityInMasterDbForLogin.getEmail());
 
-            // 4. Create initial Tenant Admin inside the tenant DB
-            String previousTenantId = TenantContext.getTenantId();
+            previousTenantId = TenantContext.getTenantId();
             try {
                 TenantContext.setTenantId(databaseName);
                 log.info("Switched TenantContext to '{}' for initial admin creation", databaseName);

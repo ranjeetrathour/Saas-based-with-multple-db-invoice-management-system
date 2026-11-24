@@ -1,6 +1,6 @@
 package com.moptra.invoice.authentication.security;
 
-import com.moptra.invoice.user.enums.UserRole;
+import com.moptra.invoice.roles.entites.UserRole;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,7 +23,7 @@ public class CustomUserDetails implements UserDetails {
         this.password = password;
         this.tenantId = tenantId;
         this.companyId = companyId;
-        this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        this.authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role.getName()));
     }
 
     @Override

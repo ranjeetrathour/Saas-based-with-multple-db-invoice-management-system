@@ -49,7 +49,7 @@ public class TenantConfigServiceImpl implements TenantConfigService {
 
     private @NonNull DataSource buildHikariDataSource(@NonNull TenantDatabase tenantDatabase) {
         HikariConfig dataSource = new HikariConfig();
-        dataSource.setJdbcUrl("jdbc:postgresql://localhost:5432/" + tenantDatabase.getDatabaseName());
+        dataSource.setJdbcUrl("jdbc:postgresql://localhost:5432/" + tenantDatabase.getDatabaseName()); // this must be fetch from parameters
         dataSource.setUsername(tenantDatabase.getUsername());
         dataSource.setPassword(tenantDatabase.getPassword());
         dataSource.setPoolName("HikariPool-" + tenantDatabase.getDatabaseName());
@@ -58,13 +58,22 @@ public class TenantConfigServiceImpl implements TenantConfigService {
     }
 
     private void migrateTenant(DataSource ds, String tenantId) {
+
+        log.info("Starting Flyway migration for tenant: {}", tenantId);
+
         Flyway flyway = Flyway.configure()
                 .dataSource(ds)
-                .locations("classpath:tenant", "classpath:db/migration/tenant")
+                .locations("classpath:tenant")
                 .baselineOnMigrate(true)
+                .validateMigrationNaming(true)
                 .load();
-        flyway.migrate();
 
-        log.info("Migration completed for tenant [{}]", tenantId);
+        try {
+            var result = flyway.migrate();
+            log.info("Migration successful for tenant: {}. Migrations executed: {}",tenantId,result.migrationsExecuted);
+        } catch (Exception ex) {
+            log.error("Flyway migration failed for tenant: {}. Reason: {}", tenantId, ex.getMessage(), ex);
+            throw new IllegalStateException("Failed to migrate tenant database: " + tenantId, ex);
+        }
     }
 }

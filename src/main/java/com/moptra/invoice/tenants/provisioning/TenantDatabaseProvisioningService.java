@@ -26,7 +26,7 @@ public class TenantDatabaseProvisioningService {
                 + ":"
                 + properties.getPort()
                 + "/"
-                + properties.getAdminDatabase();
+                + properties.getAdminDatabase();  // name of the db (need to check to remove this)
 
         try (Connection connection = DriverManager.getConnection(url, properties.getUsername(), properties.getPassword());
              Statement statement = connection.createStatement()) {
