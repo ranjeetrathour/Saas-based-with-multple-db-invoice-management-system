@@ -5,6 +5,8 @@ import com.moptra.invoice.comman.Constant.Constants;
 import com.moptra.invoice.comman.exception.GenericException;
 import com.moptra.invoice.comman.mappers.GenericMapper;
 import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
+import com.moptra.invoice.roles.entites.UserRole;
+import com.moptra.invoice.roles.service.UserRoleService;
 import com.moptra.invoice.tenants.context.TenantContext;
 import com.moptra.invoice.tenants.resolver.TenantResolver;
 import com.moptra.invoice.tenants.service.TenantUserInitializerService;
@@ -39,18 +41,20 @@ public class UserServiceImpl extends BaseServiceImpl<User, String> implements Us
     private final MasterUserIdentityService masterUserIdentityService;
     private final TenantUserInitializerService tenantUserInitializerService;
     private final TenantResolver tenantResolver;
+    private final UserRoleService userRoleService;
 
     public UserServiceImpl(
             UserRepository userRepository,
             EmployeeRepository employeeRepository,
             MasterUserIdentityService masterUserIdentityService,
-            TenantUserInitializerService tenantUserInitializerService, TenantResolver tenantResolver) {
+            TenantUserInitializerService tenantUserInitializerService, TenantResolver tenantResolver, UserRoleService userRoleService) {
         super(userRepository);
         this.userRepository = userRepository;
         this.employeeRepository = employeeRepository;
         this.masterUserIdentityService = masterUserIdentityService;
         this.tenantUserInitializerService = tenantUserInitializerService;
         this.tenantResolver = tenantResolver;
+        this.userRoleService = userRoleService;
     }
 
     @Override
@@ -62,7 +66,6 @@ public class UserServiceImpl extends BaseServiceImpl<User, String> implements Us
         }
 
         String tenantId = tenantResolver.resolveActiveTenantId(currentUser);
-
         // 1. Validate uniqueness in Tenant DB before creating Master DB identity
         TenantContext.setTenantId(tenantId);
         if (userRepository.existsByEmail(request.getEmail().trim())) {
@@ -80,12 +83,20 @@ public class UserServiceImpl extends BaseServiceImpl<User, String> implements Us
         }
 
         // 3. Create User + Employee in Tenant DB
-        Employee employee = GenericMapper.map(request, Employee.class);
-        employee.setEmployeeId(request.getEmployeeId().trim().toUpperCase());
-        User user = GenericMapper.map(request, User.class);
-        user.setName(request.getName().trim());
-        user.setEmail(request.getEmail().trim().toLowerCase());
-        user.setEmployee(employee);
+        Employee employee = Employee.builder()
+                .employeeId(request.getEmployeeId())
+                .designation(request.getDesignation())
+                .department(request.getDepartment())
+                .branch(request.getBranch())
+                .joiningDate(request.getJoiningDate())
+                .build();
+        User user = User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .role(GenericMapper.map(userRoleService.getRoleById(request.getRoleId()), UserRole.class))
+                .employee(employee)
+                .build();
+
         employee.setUser(user);
 
         TenantContext.setTenantId(tenantId);

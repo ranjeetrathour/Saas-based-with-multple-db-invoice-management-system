@@ -15,7 +15,10 @@ import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
 import com.moptra.invoice.roles.repository.UserRoleRepository;
 import com.moptra.invoice.tenants.context.TenantContext;
 import com.moptra.invoice.tenants.entites.rd.Company;
+import com.moptra.invoice.tenants.enums.AccountStatus;
 import com.moptra.invoice.tenants.repository.CompanyRepository;
+import com.moptra.invoice.tenants.service.CompanyRegistrationService;
+import com.moptra.invoice.tenants.service.impl.CompanyRegistrationServiceImpl;
 import com.moptra.invoice.user.entities.rd.User;
 import com.moptra.invoice.user.entities.rd.UserIdentity;
 import com.moptra.invoice.user.enums.IdentityType;
@@ -25,6 +28,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,16 +57,18 @@ public class ClientCompanyServiceImpl extends BaseServiceImpl<ClientCompany, Str
     private final UserRoleRepository userRoleRepository;
     private final UserRepository userRepository;
     private final UserIdentityRepository userIdentityRepository;
-    private final CompanyRepository companyRepository;
+    private final CompanyRegistrationService companyRegistrationService;
+    private final PasswordEncoder passwordEncoder;
 
-    public ClientCompanyServiceImpl(JpaRepository<ClientCompany, String> repository, ClientCompanyRepository clientCompanyRepository, ClientBranchService clientBranchService,UserRoleRepository userRoleRepository, UserRepository userRepository, UserIdentityRepository userIdentityRepository, CompanyRepository companyRepository) {
+    public ClientCompanyServiceImpl(JpaRepository<ClientCompany, String> repository, ClientCompanyRepository clientCompanyRepository, ClientBranchService clientBranchService, UserRoleRepository userRoleRepository, UserRepository userRepository, UserIdentityRepository userIdentityRepository, CompanyRegistrationService companyRegistrationService, PasswordEncoder passwordEncoder) {
         super(repository);
         this.clientCompanyRepository = clientCompanyRepository;
         this.clientBranchService = clientBranchService;
         this.userRoleRepository = userRoleRepository;
         this.userRepository = userRepository;
         this.userIdentityRepository = userIdentityRepository;
-        this.companyRepository = companyRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.companyRegistrationService = companyRegistrationService;
     }
 
     /**
@@ -73,11 +79,9 @@ public class ClientCompanyServiceImpl extends BaseServiceImpl<ClientCompany, Str
      * if initial client portal credentials are requested during onboarding.
      */
     @Override
-    @Transactional
     public ClientCompanyResponse createClientCompany(@NonNull ClientCompanyRequest request) {
         try {
             String companyId = SecurityUtils.getCurrentUser().getCompanyId();
-            Company company = companyRepository.findById(companyId).orElseThrow(() -> new GenericException(HttpStatus.NOT_FOUND.value(), "Company not found with id " + companyId));
             // 1. Verify request is routed to a valid Tenant DB (not blank or master DB)
             String currentTenant = TenantContext.getTenantId();
             if (currentTenant == null || currentTenant.isBlank() || "master".equalsIgnoreCase(currentTenant.trim())) {
@@ -123,10 +127,15 @@ public class ClientCompanyServiceImpl extends BaseServiceImpl<ClientCompany, Str
             log.info("saving initial client admin in master db for login");
             try {
                 TenantContext.setTenantId(Constants.MASTER_TENANT);
+                Company company = companyRegistrationService.getById(companyId);
                 UserIdentity clientAdminIdentity = UserIdentity.builder()
                         .clientCompanyId(savedDataForCompany.getId())
                         .company(company)
-//                        .role(userRole)
+                        .name(request.adminName())
+                        .email(request.adminEmail())
+                        .passwordHash(passwordEncoder.encode(request.password()))
+                        .role(userRole.getId())
+                        .status(AccountStatus.ACTIVE)
                         .identityType(IdentityType.CLIENT)
                         .build();
                 userIdentityRepository.save(clientAdminIdentity);

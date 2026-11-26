@@ -61,7 +61,7 @@ public class MasterUserIdentityServiceImpl extends BaseServiceImpl<UserIdentity,
                 .name(request.getName().trim())
                 .email(normalizedEmail)
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-//                .role(request.getRole())
+                .role(request.getRoleId())
                 .identityType(IdentityType.TENANT) // this need to pickup from params
                 .status(AccountStatus.ACTIVE)
                 .build();

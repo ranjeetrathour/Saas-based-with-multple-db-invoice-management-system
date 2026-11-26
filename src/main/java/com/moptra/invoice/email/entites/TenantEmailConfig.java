@@ -4,6 +4,7 @@ package com.moptra.invoice.email.entites;
 import com.moptra.invoice.comman.entity.BaseEntity;
 import com.moptra.invoice.email.enums.EmailProviderType;
 import com.moptra.invoice.tenants.entites.rd.Company;
+import com.moptra.invoice.user.enums.IdentityType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,12 +17,19 @@ import lombok.*;
 @AllArgsConstructor
 public class TenantEmailConfig extends BaseEntity {
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "company_id", nullable = false, unique = true)
     private Company company;
 
     @Column(name = "sender_email", nullable = false)
     private String senderEmail;
+
+    @Column(name = "client_company_id")
+    private String clientCompanyId; // Populated when identityType == CLIENT
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "identity_type")
+    private IdentityType identityType;
 
     @Column(name = "app_password")
     private String appPassword;

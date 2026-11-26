@@ -14,9 +14,7 @@ public class GenericMapper {
         modelMapper.getConfiguration()
                 .setFieldMatchingEnabled(true)
                 .setFieldAccessLevel(Configuration.AccessLevel.PRIVATE)
-                .setMatchingStrategy(MatchingStrategies.STRICT)
-                // Globally skip any destination field named "id"
-                .setPropertyCondition(context -> !context.getMapping().getLastDestinationProperty().getName().equals("id"));
+                .setMatchingStrategy(MatchingStrategies.STRICT);
     }
 
     /**

@@ -2,6 +2,7 @@ package com.moptra.invoice.tenants.service.impl;
 
 import com.moptra.invoice.authentication.security.CustomUserDetails;
 import com.moptra.invoice.authentication.utils.SecurityUtils;
+import com.moptra.invoice.comman.Constant.Constants;
 import com.moptra.invoice.comman.exception.GenericException;
 import com.moptra.invoice.comman.mappers.GenericMapper;
 import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
@@ -33,9 +34,11 @@ import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Handles Main Tenant / Service Provider (Vendor) registration (e.g., Shyftlab),
@@ -131,7 +134,7 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
                     if (previousTenantId != null) {
                         TenantContext.setTenantId(previousTenantId);
                     } else {
-                        TenantContext.setTenantId("master");
+                        TenantContext.setTenantId(Constants.MASTER_TENANT);
                     }
                     log.info("Restored TenantContext to '{}'", TenantContext.getTenantId());
                 }
@@ -244,6 +247,12 @@ public class CompanyRegistrationServiceImpl extends BaseServiceImpl<Company, Str
                 company.getStatus().name(),
                 branchResponses
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Company getById(String companyId) {
+        return (findById(companyId));
     }
 
     /**

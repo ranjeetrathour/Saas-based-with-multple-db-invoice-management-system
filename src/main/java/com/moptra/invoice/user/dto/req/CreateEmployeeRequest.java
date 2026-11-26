@@ -1,7 +1,6 @@
 package com.moptra.invoice.user.dto.req;
 
-import com.moptra.invoice.roles.entites.UserRole;
-import com.moptra.invoice.roles.entites.UserRole;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,7 +15,7 @@ public class CreateEmployeeRequest {
     private String name;
     private String email;
     private String password;
-    private UserRole role;
+    private String roleId; //need to take role id in req
 
     // Employee information
     private String employeeId;

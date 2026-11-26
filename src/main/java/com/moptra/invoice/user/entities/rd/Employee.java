@@ -4,7 +4,6 @@ import com.moptra.invoice.comman.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -38,8 +37,7 @@ public class Employee extends BaseEntity {
     private LocalDate joiningDate;
 
 
-    @OneToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id", unique = true)
+    @OneToOne(mappedBy = "employee", fetch = FetchType.LAZY)
     @ToString.Exclude
     private User user;
 }

@@ -13,6 +13,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -57,7 +58,7 @@ public class UserRoleServiceImpl extends BaseServiceImpl<UserRole, String> imple
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public UserRoleRes getRoleById(@NonNull String id) {
         validateTenantContext();
         UserRole role = userRoleRepository.findById(id).orElseThrow(() -> new GenericException(HttpStatus.NOT_FOUND.value(), "Role not found with id: " + id));

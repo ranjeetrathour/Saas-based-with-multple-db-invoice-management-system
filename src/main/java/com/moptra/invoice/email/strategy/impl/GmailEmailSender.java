@@ -25,7 +25,7 @@ public class GmailEmailSender implements EmailSender {
         message.setFrom(config.getSenderEmail());
         message.setTo(messageDto.getTo());
         message.setSubject(messageDto.getSubject());
-        message.setText(messageDto.getBody());
+        message.setText("messageDto.getBody()");
 
         if (messageDto.getReplyTo() != null) {
             message.setReplyTo(messageDto.getReplyTo());

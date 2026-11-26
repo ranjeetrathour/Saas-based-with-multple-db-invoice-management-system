@@ -3,23 +3,25 @@ package com.moptra.invoice.email.service.impl;
 
 import com.moptra.invoice.authentication.security.CustomUserDetails;
 import com.moptra.invoice.authentication.utils.SecurityUtils;
-import com.moptra.invoice.comman.Constant.Constants;
 import com.moptra.invoice.comman.exception.GenericException;
 import com.moptra.invoice.comman.mappers.GenericMapper;
 import com.moptra.invoice.comman.service.impl.BaseServiceImpl;
 import com.moptra.invoice.email.dto.req.TenantEmailConfigReq;
 import com.moptra.invoice.email.dto.res.TenantEmailConfigRes;
 import com.moptra.invoice.email.entites.TenantEmailConfig;
+import com.moptra.invoice.email.repository.TenantEmailConfigRepository;
 import com.moptra.invoice.email.service.TenantEmailConfigService;
 import com.moptra.invoice.tenants.context.TenantContext;
 import com.moptra.invoice.tenants.entites.rd.Company;
-import com.moptra.invoice.tenants.repository.CompanyRepository;
+import com.moptra.invoice.tenants.service.CompanyRegistrationService;
+import com.moptra.invoice.user.enums.IdentityType;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
@@ -32,16 +34,18 @@ public class TenantEmailConfigServiceImpl extends BaseServiceImpl<TenantEmailCon
 
 
     private final EntityManager entityManager;
-    private final CompanyRepository companyRepository;
+    private final CompanyRegistrationService companyRegistrationService;
+    private final TenantEmailConfigRepository emailConfigRepository;
 
-    public TenantEmailConfigServiceImpl(JpaRepository<TenantEmailConfig, String> repository, EntityManager entityManager, CompanyRepository companyRepository) {
+    public TenantEmailConfigServiceImpl(JpaRepository<TenantEmailConfig, String> repository, EntityManager entityManager, CompanyRegistrationService companyRegistrationService, TenantEmailConfigRepository emailConfigRepository) {
         super(repository);
         this.entityManager = entityManager;
-        this.companyRepository = companyRepository;
+        this.companyRegistrationService = companyRegistrationService;
+        this.emailConfigRepository = emailConfigRepository;
     }
 
     @Override
-    public TenantEmailConfigRes addGmailConfigInfo(TenantEmailConfigReq request) {
+    public TenantEmailConfigRes addMailkConfigInfo(TenantEmailConfigReq request) {
 
         // 1. Validate request
         if (Objects.isNull(request)) {
@@ -62,27 +66,20 @@ public class TenantEmailConfigServiceImpl extends BaseServiceImpl<TenantEmailCon
 //        validateGmailConfig(request);
 
         // 5. Map request to entity
+        var tenantConfigData =  GenericMapper.map(request,TenantEmailConfig.class);
         // 5. Explicitly map request to entity
         TenantEmailConfig config = new TenantEmailConfig();
-
-        config.setCompany(company);
-        config.setSenderEmail(request.senderEmail());
-        config.setAppPassword(request.appPassword());
-        config.setHost(request.host());
-        config.setPort(Integer.valueOf(request.port()));
-        config.setEmailProviderType(request.emailProviderType());
-        config.setIsActive(true);
-        //        config.setAppPassword(request.appPassword());//it should be encrypted in future will do
+        /**
+         * TODO need to encrypt the data for secrete or password
+         */
 
         // 6. Associate configuration with company
-        config.setCompany(company);
+        tenantConfigData.setCompany(company);
         String previousTenant = TenantContext.getTenantId();
         // 7. Save configuration
-        TenantEmailConfig savedConfig;
         try {
             TenantContext.setTenantId(MASTER_TENANT);
-
-             config = save(config);
+             tenantConfigData = save(tenantConfigData);
         }finally {
             if (previousTenant == null) {
                 TenantContext.clear();
@@ -91,10 +88,61 @@ public class TenantEmailConfigServiceImpl extends BaseServiceImpl<TenantEmailCon
             }
         }
 
-        log.info("Gmail configuration saved for companyId: {}", currentUser.getCompanyId());
+        log.info("mail configuration saved for companyId: {}", currentUser.getCompanyId());
 
         // 8. Return response
-        return new TenantEmailConfigRes("Gmail configuration saved successfully", config.getSenderEmail());
+        return new TenantEmailConfigRes("mail configuration saved successfully", tenantConfigData.getSenderEmail());
+    }
+
+    @Override
+    public TenantEmailConfigRes saveOrUpdateClientConfig(String clientCompanyId, TenantEmailConfigReq request) {
+        if (request == null) {
+            throw new GenericException(HttpStatus.BAD_REQUEST.value(), "Email configuration request cannot be null");
+        }
+        if (clientCompanyId == null || clientCompanyId.isBlank()) {
+            throw new GenericException(HttpStatus.BAD_REQUEST.value(), "Client company ID is required");
+        }
+
+        CustomUserDetails currentUser = SecurityUtils.getCurrentUser();
+        if (currentUser == null || currentUser.getCompanyId() == null) {
+            throw new GenericException(HttpStatus.UNAUTHORIZED.value(), "Authenticated company information not found");
+        }
+
+        Company company = getCompanyFromMasterTenant(currentUser.getCompanyId());
+
+        String previousTenant = TenantContext.getTenantId();
+        try {
+            TenantContext.setTenantId(MASTER_TENANT);
+
+            TenantEmailConfig config = emailConfigRepository
+                    .findByCompanyIdAndIdentityTypeAndClientCompanyId(company.getId(), IdentityType.CLIENT.name(), clientCompanyId)
+                    .orElseGet(() -> TenantEmailConfig.builder()
+                            .company(company)
+                            .identityType(IdentityType.CLIENT)
+                            .clientCompanyId(clientCompanyId)
+                            .build());
+
+            config.setEmailProviderType(request.emailProviderType());
+            config.setSenderEmail(request.senderEmail());
+            // TODO: Encrypt appPassword and clientSecret before saving
+            config.setAppPassword(request.appPassword());
+            config.setHost(request.host());
+            config.setPort(request.port());
+            config.setClientId(request.clientId());
+            config.setClientSecret(request.clientSecret());
+            config.setTenantId(request.tenantId());
+            config.setRefreshToken(request.refreshToken());
+            config.setIsActive(true);
+
+            TenantEmailConfig saved = save(config);
+            return new TenantEmailConfigRes("Client mail configuration saved successfully", saved.getSenderEmail());
+        } finally {
+            if (previousTenant == null) {
+                TenantContext.clear();
+            } else {
+                TenantContext.setTenantId(previousTenant);
+            }
+        }
     }
 
     private @Nonnull Company getCompanyFromMasterTenant(String companyId) {
@@ -102,9 +150,7 @@ public class TenantEmailConfigServiceImpl extends BaseServiceImpl<TenantEmailCon
         String previousTenant = TenantContext.getTenantId();
         try {
             TenantContext.setTenantId(MASTER_TENANT);
-
-            return companyRepository.findById(companyId).orElseThrow(() -> new GenericException(HttpStatus.NOT_FOUND.value(), Constants.COMPANY_NOT_FOUND));
-
+            return companyRegistrationService.getById(companyId);
         } finally {
             if (previousTenant == null) {
                 TenantContext.clear();
@@ -120,25 +166,6 @@ public class TenantEmailConfigServiceImpl extends BaseServiceImpl<TenantEmailCon
             throw new GenericException(HttpStatus.BAD_REQUEST.value(), "Sender email is required");
         }
 
-        // Add additional validations as per your requirements.
     }
 
-    private void logCurrentDatabase() {
-
-        Object[] dbInfo = (Object[]) entityManager
-                .createNativeQuery("""
-                SELECT current_database(),
-                       current_schema(),
-                       current_user,
-                       inet_server_addr(),
-                       inet_server_port()
-            """)
-                .getSingleResult();
-
-        log.info("DATABASE: {}", dbInfo[0]);
-        log.info("SCHEMA: {}", dbInfo[1]);
-        log.info("DB USER: {}", dbInfo[2]);
-        log.info("DB HOST: {}", dbInfo[3]);
-        log.info("DB PORT: {}", dbInfo[4]);
-    }
 }

@@ -4,5 +4,6 @@ import com.moptra.invoice.email.dto.req.TenantEmailConfigReq;
 import com.moptra.invoice.email.dto.res.TenantEmailConfigRes;
 
 public interface TenantEmailConfigService {
-    TenantEmailConfigRes addGmailConfigInfo(TenantEmailConfigReq tenantGmailConfigReq);
+    TenantEmailConfigRes addMailkConfigInfo(TenantEmailConfigReq tenantGmailConfigReq);
+    TenantEmailConfigRes saveOrUpdateClientConfig(String clientCompanyId, TenantEmailConfigReq request);
 }
